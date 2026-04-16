@@ -8,7 +8,6 @@ const nextConfig: NextConfig = {
     qualities: [70, 70, 70, 70, 70, 70, 70, 70, 70, 70, 70, 70, 70, 70, 70, 70, 70, 70, 75, 85],
   },
   devIndicators: {
-    appIsrStatus: false,
     buildActivity: false,
   },
 };
