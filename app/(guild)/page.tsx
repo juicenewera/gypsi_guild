@@ -50,7 +50,7 @@ export default function DashboardPage() {
           .from('posts')
           .select('upvotes')
           .eq('author_id', user.id)
-        const upvotesSum = postsData?.reduce((sum, post) => sum + (post.upvotes || 0), 0) || 0
+        const upvotesSum = postsData?.reduce((sum: number, post: { upvotes?: number }) => sum + (post.upvotes || 0), 0) || 0
 
         // Ranking
         const { data: rankingData } = await supabase
@@ -63,7 +63,7 @@ export default function DashboardPage() {
         let nextUserXp: number | null = null
 
         if (rankingData) {
-          const userIndex = rankingData.findIndex(u => u.id === user.id)
+          const userIndex = rankingData.findIndex((u: { id: string; xp: number; username: string }) => u.id === user.id)
           if (userIndex !== -1) {
             rankingPosition = userIndex + 1
             if (userIndex > 0) {

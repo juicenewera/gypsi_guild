@@ -56,34 +56,26 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   login: async (email: string, password: string) => {
     set({ isLoading: true })
     try {
-      const supabase = getSupabaseClient()
-
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
       })
 
-      if (error) throw error
-      if (!data.user) throw new Error('Login failed')
-
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', data.user.id)
-        .single()
-
-      if (profile) {
-        await supabase
-          .from('profiles')
-          .update({ last_seen_at: new Date().toISOString() })
-          .eq('id', data.user.id)
+      if (!response.ok) {
+        const { error } = await response.json()
+        throw new Error(error || 'Login failed')
       }
 
-      set({
-        user: profile as unknown as Profile,
-        isAuthenticated: true,
-        isLoading: false,
-      })
+      const { profile } = await response.json()
+
+      if (profile) {
+        set({
+          user: profile as unknown as Profile,
+          isAuthenticated: true,
+          isLoading: false,
+        })
+      }
     } catch (error) {
       set({ isLoading: false })
       throw error
@@ -93,43 +85,20 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   register: async (email: string, password: string, username: string, path: 'ladino' | 'mago' | 'mercador') => {
     set({ isLoading: true })
     try {
-      const supabase = getSupabaseClient()
-
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            username,
-            display_name: username,
-          },
-        },
+      const response = await fetch('/api/auth/signup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password, username, path }),
       })
 
-      if (authError) throw authError
-      if (!authData.user) throw new Error('Registration failed')
+      if (!response.ok) {
+        const { error } = await response.json()
+        throw new Error(error || 'Registration failed')
+      }
 
-      const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .insert({
-          id: authData.user.id,
-          username,
-          display_name: username,
-          path,
-          level: 1,
-          xp: 0,
-        })
-        .select()
-        .single()
+      const { profile } = await response.json()
 
-      if (profileError) throw profileError
-
-      const { data: signInData } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      })
-
-      if (signInData.user && profile) {
+      if (profile) {
         set({
           user: profile as unknown as Profile,
           isAuthenticated: true,
