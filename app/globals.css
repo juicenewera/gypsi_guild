@@ -28,6 +28,19 @@
   --glass-blur:         12px;
   --glass-bg-light:     rgba(0,0,0,0.03);
   --glass-border-light: rgba(0,0,0,0.08);
+
+  /* Layout tokens */
+  --sidebar-width: 240px;
+  --header-height: 64px;
+
+  /* App shell tokens */
+  --app-bg: #0D0D0D;
+  --app-surface: #161616;
+  --app-elevated: #1E1E1E;
+  --app-border: rgba(255,255,255,0.08);
+  --app-text: #F0F0F0;
+  --app-muted: #888888;
+  --app-subtle: #555555;
 }
 
 @layer base {
@@ -85,3 +98,163 @@
   to   { left: 100%; }
 }
 .animate-fade-up { animation: fadeUp 0.6s cubic-bezier(0.4,0,0.2,1) forwards; }
+
+/* Fade in animation */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-in { animation: fadeIn 0.4s ease-out both; }
+
+/* ========== SEMANTIC COLOR CLASSES ========== */
+.bg-bg-primary { background: var(--app-bg); }
+.bg-bg-surface { background: var(--app-surface); }
+.bg-bg-elevated { background: var(--app-elevated); }
+
+.text-text-primary { color: var(--app-text); }
+.text-text-secondary { color: var(--app-muted); }
+.text-text-muted { color: var(--app-subtle); }
+
+.border-border-default { border-color: var(--app-border); }
+.border-border-subtle { border-color: rgba(255,255,255,0.05); }
+
+/* ========== COMPONENT CLASSES ========== */
+
+/* Card component */
+.card-donos {
+  background: var(--app-surface);
+  border: 1px solid var(--app-border);
+  border-radius: 12px;
+  transition: all 0.2s ease;
+}
+.card-donos:hover {
+  border-color: rgba(255,255,255,0.15);
+}
+
+/* Buttons */
+.btn-donos {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  transition: all 0.15s;
+  border-radius: 8px;
+  cursor: pointer;
+  border: none;
+  padding: 12px 20px;
+}
+
+.btn-donos-primary {
+  background: #ffffff;
+  color: #000000;
+}
+.btn-donos-primary:hover {
+  background: #e5e5e5;
+}
+.btn-donos-primary:disabled {
+  background: #888888;
+  color: #ffffff;
+  cursor: not-allowed;
+}
+
+/* Inputs */
+.input-donos {
+  width: 100%;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 10px;
+  color: #ffffff;
+  padding: 12px 16px;
+  font-size: 14px;
+  outline: none;
+  transition: all 0.15s;
+  font-family: var(--font-body);
+}
+.input-donos::placeholder {
+  color: rgba(255,255,255,0.3);
+}
+.input-donos:focus {
+  background: rgba(255,255,255,0.12);
+  border-color: rgba(255,255,255,0.3);
+  box-shadow: 0 0 0 3px rgba(255,255,255,0.05);
+}
+
+/* Nav items (sidebar) */
+.nav-item-donos {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 12px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #666666;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.nav-item-donos:hover {
+  background: #f0f0f0;
+  color: #333333;
+}
+.nav-item-donos.active {
+  background: #e5e5e5;
+  color: #000000;
+  font-weight: 600;
+}
+
+/* ========== RPG PATH COLORS ========== */
+
+/* Mago (Purple) */
+.text-mago-500 { color: #8B5CF6; }
+.text-mago-400 { color: rgba(139,92,246,0.7); }
+.border-mago-300 { border-color: rgba(139,92,246,0.3); }
+.border-mago-400 { border-color: rgba(139,92,246,0.4); }
+.bg-mago-50 { background: rgba(139,92,246,0.05); }
+
+/* Guerreiro/Ladino (Red) */
+.text-guerr-500 { color: #EF4444; }
+.text-guerr-400 { color: rgba(239,68,68,0.7); }
+.border-guerr-300 { border-color: rgba(239,68,68,0.3); }
+.border-guerr-400 { border-color: rgba(239,68,68,0.4); }
+.bg-guerr-50 { background: rgba(239,68,68,0.05); }
+
+/* XP/Mercador (Amber) */
+.text-xp-500 { color: #F59E0B; }
+.text-xp-400 { color: rgba(245,158,11,0.7); }
+.text-xp-600 { color: #D97706; }
+.border-xp-400 { border-color: rgba(245,158,11,0.4); }
+.bg-xp-50 { background: rgba(245,158,11,0.05); }
+
+/* Danger colors */
+.text-danger-600 { color: #DC2626; }
+.hover\:bg-danger-50:hover { background: rgba(220,38,38,0.06); }
+
+/* ========== PATH BADGE ========== */
+
+.path-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+}
+
+.path-badge-mago {
+  color: #8B5CF6;
+  background: rgba(139,92,246,0.1);
+}
+
+.path-badge-guerr {
+  color: #EF4444;
+  background: rgba(239,68,68,0.1);
+}
+
+.path-badge-merc {
+  color: #F59E0B;
+  background: rgba(245,158,11,0.1);
+}
