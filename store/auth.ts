@@ -82,11 +82,23 @@ export const useAuthStore = create<AuthState>((set) => ({
       const { data: { session } } = await supabase.auth.getSession()
 
       if (session?.user) {
-        const { data: profile } = await supabase
+        let { data: profile } = await supabase
           .from('profiles')
           .select('*')
           .eq('id', session.user.id)
-          .single()
+          .maybeSingle()
+
+        if (!profile) {
+          await supabase.from('profiles').insert({
+            id: session.user.id,
+            username: session.user.user_metadata?.username || session.user.email?.split('@')[0] || 'membro',
+            path: session.user.user_metadata?.path || 'mago',
+            level: 1,
+            xp: 0
+          })
+          const { data: fixedProfile } = await supabase.from('profiles').select('*').eq('id', session.user.id).maybeSingle()
+          profile = fixedProfile
+        }
 
         set({
           user: profile as unknown as Profile ?? null,
@@ -136,11 +148,23 @@ export const useAuthStore = create<AuthState>((set) => ({
         throw new Error(msg)
       }
 
-      const { data: profile } = await supabase
+      let { data: profile } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', data.user!.id)
-        .single()
+        .maybeSingle()
+
+      if (!profile) {
+        await supabase.from('profiles').insert({
+          id: data.user!.id,
+          username: data.user.user_metadata?.username || data.user.email?.split('@')[0] || 'membro',
+          path: data.user.user_metadata?.path || 'mago',
+          level: 1,
+          xp: 0
+        })
+        const { data: fixedProfile } = await supabase.from('profiles').select('*').eq('id', data.user!.id).maybeSingle()
+        profile = fixedProfile
+      }
 
       await supabase
         .from('profiles')
@@ -233,8 +257,19 @@ export const useAuthStore = create<AuthState>((set) => ({
       const supabase = getSupabaseClient()
       const { data: { session } } = await supabase.auth.getSession()
       if (!session?.user) { set({ user: null, isAuthenticated: false }); return }
-      const { data: profile } = await supabase
-        .from('profiles').select('*').eq('id', session.user.id).single()
+      let { data: profile } = await supabase
+        .from('profiles').select('*').eq('id', session.user.id).maybeSingle()
+      if (!profile) {
+        await supabase.from('profiles').insert({
+          id: session.user.id,
+          username: session.user.user_metadata?.username || session.user.email?.split('@')[0] || 'membro',
+          path: session.user.user_metadata?.path || 'mago',
+          level: 1,
+          xp: 0
+        })
+        const { data: fixedProfile } = await supabase.from('profiles').select('*').eq('id', session.user.id).maybeSingle()
+        profile = fixedProfile
+      }
       if (profile) set({ user: profile as unknown as Profile })
     } catch { /* silent */ }
   },

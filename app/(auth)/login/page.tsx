@@ -89,7 +89,12 @@ function LoginForm() {
             </div>
 
             <div className="space-y-1">
-              <label className="text-xs font-bold text-gray-700 uppercase tracking-wider ml-1">Senha</label>
+              <div className="flex items-center justify-between ml-1">
+                <label className="text-xs font-bold text-gray-700 uppercase tracking-wider">Senha</label>
+                <Link href="/esqueci-senha" className="text-xs font-bold text-blue-600 hover:text-blue-800 transition-colors">
+                  Esqueceu?
+                </Link>
+              </div>
               <div className="relative">
                 <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                 <input 
