@@ -1,81 +1,78 @@
 'use client'
 
 import Link from 'next/link'
-import { cn, timeAgo, formatCurrency, truncate, getAvatarUrl } from '@/lib/utils'
+import { timeAgo, formatCurrency, truncate } from '@/lib/utils'
 import { ArrowUp, MessageSquare, Sparkles } from 'lucide-react'
-import type { Post } from '@/lib/pocketbase/types'
 
+// Utilizando um formato any para evitar dependência do PocketBase types
 interface PostCardProps {
-  post: Post
+  post: any
 }
 
 export function PostCard({ post }: PostCardProps) {
-  const author = post.expand?.author
-  const category = post.expand?.category
+  const author = post.author
+  const category = post.category
   const isAdventure = post.type === 'adventure'
+
+  const initials = (author?.username || 'U').slice(0, 2).toUpperCase()
+  const pathName = author?.path ? author.path.charAt(0).toUpperCase() + author.path.slice(1) : 'Builder'
 
   return (
     <Link href={`/post/${post.id}`} className="block group">
-      <article className="card-donos p-8 md:p-12 bg-bg-primary transition-all duration-300">
+      <article className="bg-[#111] border border-white/10 rounded-2xl p-7 md:p-9 transition-all duration-300 hover:bg-[#161616] hover:border-white/20">
+        
         {/* Author Meta */}
-        <div className="flex items-center justify-between mb-10 pb-6 border-b border-black/5">
+        <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-4">
-             {author && (
-              <img
-                src={getAvatarUrl(author.avatar, author.id)}
-                alt={author.username}
-                className="w-10 h-10 border border-black grayscale group-hover:grayscale-0 transition-all duration-500"
-              />
-            )}
+            <div className="w-10 h-10 bg-white text-black rounded-full flex items-center justify-center font-bold text-sm">
+              {initials}
+            </div>
             <div className="flex flex-col">
-              <span className="text-[13px] font-black text-black uppercase tracking-tight leading-none mb-1">
+              <span className="text-sm font-bold text-white leading-none mb-1">
                 {author?.name || author?.username}
               </span>
-              <span className="text-[10px] text-text-muted font-bold uppercase tracking-[0.2em]">
-                {author?.path || 'builder'} · LVL {author?.level || 1}
+              <span className="text-[10px] text-gray-500 font-bold uppercase tracking-widest">
+                {pathName} · Nível {author?.level || 1}
               </span>
             </div>
           </div>
           
-          <div className="flex items-center gap-4">
-             <span className="text-[11px] font-black text-text-muted uppercase tracking-widest">
-              {timeAgo(post.created)}
-            </span>
-          </div>
+          <span className="text-xs font-medium text-gray-500">
+            {timeAgo(post.created)}
+          </span>
         </div>
 
         {/* Content */}
-        <div className="space-y-6">
-          <h3 className="text-3xl md:text-5xl font-normal text-black leading-[1.1] uppercase tracking-tighter group-hover:bg-black group-hover:text-white transition-all inline-block px-1">
+        <div className="space-y-4 mb-8">
+          <h3 className="text-3xl md:text-4xl font-serif font-medium text-white leading-tight group-hover:text-blue-400 transition-colors">
             {post.title}
           </h3>
-
-          <p className="text-lg md:text-xl text-text-secondary leading-snug font-medium italic max-w-3xl">
+          <p className="text-base text-gray-400 leading-relaxed max-w-3xl">
             {truncate(post.body, 180)}
           </p>
         </div>
 
-        {/* Adventure Metrics */}
+        {/* Adventure Metrics highlight (If specific) */}
         {isAdventure && post.revenue_amount && (
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-12 mt-12 py-10 border-y-2 border-black bg-bg-surface px-6">
-            <div className="flex flex-col gap-2">
-              <span className="text-[11px] font-black text-text-muted uppercase tracking-[0.2em]">Revenue</span>
-              <span className="text-3xl font-bold text-black text-pixel">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-6 my-8 py-6 border-y border-white/10">
+            <div className="flex flex-col">
+              <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">Revenue</span>
+              <span className="text-2xl font-serif font-medium text-[#10B981]">
                 {formatCurrency(post.revenue_amount)}
               </span>
             </div>
             
             {post.client_niche && (
-              <div className="flex flex-col gap-2">
-                <span className="text-[11px] font-black text-text-muted uppercase tracking-[0.2em]">Niche</span>
-                <span className="text-2xl font-bold text-black uppercase text-pixel">{post.client_niche}</span>
+              <div className="flex flex-col">
+                <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">Nicho</span>
+                <span className="text-lg font-medium text-white">{post.client_niche}</span>
               </div>
             )}
 
             {post.days_to_close && (
-              <div className="flex flex-col gap-2 hidden md:flex">
-                <span className="text-[11px] font-black text-text-muted uppercase tracking-[0.2em]">Cycle</span>
-                <span className="text-2xl font-bold text-black text-pixel">{post.days_to_close}D</span>
+              <div className="flex flex-col hidden md:flex">
+                <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">Ciclo de Venda</span>
+                <span className="text-lg font-medium text-white">{post.days_to_close} dias</span>
               </div>
             )}
           </div>
@@ -83,40 +80,38 @@ export function PostCard({ post }: PostCardProps) {
 
         {/* Systems Tag Section */}
         {isAdventure && post.system_used && post.system_used.length > 0 && (
-          <div className="flex items-center gap-4 mt-10">
-            <span className="text-[10px] font-black text-text-muted uppercase tracking-[0.3em]">Systems:</span>
-            <div className="flex gap-2">
-              {post.system_used.map(sys => (
-                <span key={sys} className="text-[11px] font-black text-black border border-black px-2 py-0.5 bg-white uppercase">
-                  {sys}
-                </span>
-              ))}
-            </div>
+          <div className="flex items-center gap-3 mb-6 flex-wrap">
+            <span className="text-[10px] font-bold text-gray-600 uppercase tracking-widest">Systems:</span>
+            {post.system_used.map((sys: string) => (
+              <span key={sys} className="text-[11px] font-medium text-gray-300 bg-white/5 border border-white/10 rounded-full px-3 py-1">
+                {sys}
+              </span>
+            ))}
           </div>
         )}
 
         {/* Footer */}
-        <div className="flex items-center justify-between mt-12 pt-8">
-          <div className="flex items-center gap-10">
-            <div className="flex items-center gap-2 text-text-secondary hover:text-black transition-colors">
-              <ArrowUp className="w-5 h-5 stroke-[2.5]" />
-              <span className="text-sm font-black text-pixel">{post.upvotes || 0}</span>
+        <div className="flex items-center justify-between pt-6 border-t border-white/5">
+          <div className="flex items-center gap-6">
+            <div className="flex items-center gap-2 text-gray-400 group-hover:text-white transition-colors">
+              <ArrowUp className="w-5 h-5" />
+              <span className="text-sm font-medium">{post.upvotes || 0}</span>
             </div>
-            <div className="flex items-center gap-2 text-text-secondary">
-              <MessageSquare className="w-5 h-5 stroke-[2.5]" />
-              <span className="text-sm font-black text-pixel">{post.comments_count || 0}</span>
+            <div className="flex items-center gap-2 text-gray-400">
+              <MessageSquare className="w-5 h-5" />
+              <span className="text-sm font-medium">{post.comments_count || 0}</span>
             </div>
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
              {post.is_validated && (
-              <div className="flex items-center gap-2 px-3 py-1 bg-black text-white">
-                <Sparkles size={12} />
-                <span className="text-[10px] font-black uppercase tracking-[0.2em]">Verified</span>
+              <div className="flex items-center gap-1.5 px-3 py-1 bg-yellow-500/10 text-yellow-500 rounded-full">
+                <Sparkles size={12} fill="currentColor" />
+                <span className="text-[10px] font-bold uppercase tracking-widest">Validado</span>
               </div>
             )}
-            <span className="text-[11px] font-black text-black uppercase tracking-widest bg-bg-elevated px-3 py-1 border border-black/10 text-pixel">
-              {category?.name || 'Feed'}
+            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest bg-white/5 rounded-full px-3 py-1 border border-white/10">
+              {category?.name || 'Geral'}
             </span>
           </div>
         </div>

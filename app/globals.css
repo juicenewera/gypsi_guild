@@ -14,6 +14,7 @@
   --font-pixel: 'Dico', monospace;
   --font-body: 'Inter', system-ui, sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
+  --font-serif: var(--font-serif), serif;
   --color-gipsy-dark:   #0A0A0A;
   --color-gipsy-blue:   #3B82F6;
   --color-gipsy-glow:   #60A5FA;
