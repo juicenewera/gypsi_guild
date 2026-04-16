@@ -47,7 +47,7 @@ export default function RegisterPage() {
       router.push('/dashboard')
     } catch (err: any) {
       if (err?.message === 'CONFIRM_EMAIL') {
-        setError('Conta criada! Verifique sua caixa de spam para confirmar seu email antes de entrar.')
+        router.push('/login?registered=true')
       } else {
         setError(err?.message || 'Erro ao criar conta. Tente novamente.')
       }

@@ -1,21 +1,23 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, useEffect, Suspense } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
 import { useAuthStore } from '@/store/auth'
-import { ArrowRight, Lock, Mail, AlertCircle } from 'lucide-react'
+import { ArrowRight, Lock, Mail, AlertCircle, CheckCircle } from 'lucide-react'
 
 const schema = z.object({
   email: z.string().email('Email inválido'),
   password: z.string().min(6, 'Senha deve ter no mínimo 6 caracteres')
 })
 
-export default function LoginPage() {
+function LoginForm() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const isRegistered = searchParams.get('registered') === 'true'
   const { login, isAuthenticated, isLoading, error: authError, clearError, initialized } = useAuthStore()
   const [error, setError] = useState('')
 
@@ -61,6 +63,13 @@ export default function LoginPage() {
             <div className="mb-6 bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-xl text-sm flex items-start gap-3">
               <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
               <span>{error || authError}</span>
+            </div>
+          )}
+
+          {isRegistered && !error && !authError && (
+            <div className="mb-6 bg-emerald-50 border border-emerald-200 text-emerald-700 px-4 py-3 rounded-xl text-sm flex items-start gap-3">
+              <CheckCircle className="w-5 h-5 shrink-0 mt-0.5" />
+              <span>Sua conta foi forjada! Verifique a sua caixa de entrada e spam para confirmar seu e-mail antes de acessar.</span>
             </div>
           )}
 
@@ -113,5 +122,13 @@ export default function LoginPage() {
       </div>
 
     </div>
+  )
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-[#F9FAFB]" />}>
+      <LoginForm />
+    </Suspense>
   )
 }
