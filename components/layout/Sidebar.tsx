@@ -11,6 +11,7 @@ const mainNav = [
   { href: '/feed',    label: 'Feed',      emoji: '📋' },
   { href: '/cursos',  label: 'Cursos',    emoji: '🎓' },
   { href: '/ranking', label: 'Ranking',   emoji: '🏆' },
+  { href: '/calendario', label: 'Calendário', emoji: '📅' },
   { href: '/missoes', label: 'Missões',   emoji: '⚔️' },
   { href: '/chat',    label: 'Chat',      emoji: '💬' },
 ]

@@ -1,153 +1,132 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
-import { PathBadge } from '@/components/ui/PathBadge'
-import { XPBar } from '@/components/ui/XPBar'
-import { RankingSkeleton } from '@/components/ui/Skeleton'
-import { cn, getAvatarUrl } from '@/lib/utils'
-import { getLevelForXP } from '@/lib/xp'
-import { getClient } from '@/lib/pocketbase/client'
-import type { Profile } from '@/lib/pocketbase/types'
-
-type Tab = 'all' | 'month' | 'week'
-
-const tabs: { value: Tab; label: string }[] = [
-  { value: 'all', label: 'ALL TIME' },
-  { value: 'month', label: 'MONTHLY' },
-  { value: 'week', label: 'WEEKLY' },
-]
+import { useState } from 'react'
+import Image from 'next/image'
 
 export default function RankingPage() {
-  const [tab, setTab] = useState<Tab>('all')
-  const [users, setUsers] = useState<Profile[]>([])
-  const [loading, setLoading] = useState(true)
+  const MOCK_LEADERBOARD = [
+    { rank: 1, name: 'Cigano.agi', xp: 473, isHot: true },
+    { rank: 2, name: 'Shiv pratap', xp: 433, isHot: true },
+    { rank: 3, name: 'Jason E Jess', xp: 316, isHot: false },
+    { rank: 4, name: 'Mark Noah', xp: 306, isHot: false },
+    { rank: 5, name: 'Juli Hayunga', xp: 305, isHot: false },
+    { rank: 6, name: 'Myra Davis', xp: 233, isHot: false },
+  ]
 
-  const loadRanking = useCallback(async () => {
-    setLoading(true)
-    try {
-      const pb = getClient()
-      const result = await pb.collection('users').getList(1, 50, {
-        sort: '-xp',
-        filter: 'xp > 0',
-      })
-      setUsers(result.items as unknown as Profile[])
-    } catch (err) {
-      setUsers([])
-    } finally {
-      setLoading(false)
-    }
-  }, [])
+  const MOCK_LEVELS = [
+    { level: 1, title: 'Recruta', percentage: '89%' },
+    { level: 2, title: 'Aprendiz', percentage: '5%' },
+    { level: 3, title: 'Iniciado', percentage: '1%' },
+    { level: 4, title: 'Aventureiro', percentage: '1%' },
+    { level: 5, title: 'Veterano', percentage: '1%' },
+    { level: 6, title: 'Especialista', percentage: '1%' },
+    { level: 7, title: 'Mestre', percentage: '1%' },
+    { level: 8, title: 'Arquimago', percentage: '0%' },
+    { level: 9, title: 'Lendário', percentage: '1%', unlocks: 'Chat with members' },
+  ]
 
-  useEffect(() => {
-    loadRanking()
-  }, [loadRanking])
-
-  const medals = ['🥇', '🥈', '🥉']
+  const user = {
+    name: 'Cigano AGI',
+    level: 8,
+    pointsToNext: 1550,
+  }
 
   return (
-    <div className="max-w-5xl mx-auto px-4 py-12 animate-fade-in">
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-16 pb-8 border-b-2 border-black">
-        <div className="space-y-4">
-          <h1 className="text-5xl md:text-7xl font-normal text-black uppercase tracking-tighter leading-none">
-            Elite <br/> Leaderboard
-          </h1>
-          <p className="text-xl text-text-secondary italic font-medium">Os builders mais letais da Guilda.</p>
-        </div>
+    <div className="min-h-screen bg-[#F9FAFB] p-6 lg:p-10 text-black">
+      <div className="max-w-6xl mx-auto space-y-8">
+        
+        {/* ── TOP HEAD ─────────────────────────────────────── */}
+        <div className="bg-white rounded-2xl p-8 lg:p-12 border border-gray-100 shadow-sm flex flex-col lg:flex-row items-center lg:items-start gap-12">
+          
+          {/* User Profile Summary */}
+          <div className="flex flex-col items-center text-center">
+            <div className="relative mb-4">
+              <div className="w-32 h-32 rounded-full border-[6px] border-blue-50 bg-gray-100 flex items-center justify-center font-serif text-3xl font-bold">
+                CI
+              </div>
+              <div className="absolute bottom-0 right-2 w-8 h-8 rounded-full bg-blue-500 text-white font-bold flex items-center justify-center border-2 border-white shadow-sm">
+                {user.level}
+              </div>
+            </div>
+            <h2 className="text-2xl font-serif font-bold text-black">{user.name}</h2>
+            <p className="font-bold text-blue-500 text-sm mt-1">Level {user.level}</p>
+            <p className="text-xs text-gray-500 mt-2"><span className="font-bold text-black">{user.pointsToNext}</span> points to level up</p>
+          </div>
 
-        <div className="flex gap-4 border-2 border-black p-1 bg-bg-surface h-fit">
-          {tabs.map((t) => (
-            <button
-              key={t.value}
-              onClick={() => setTab(t.value)}
-              className={cn(
-                'px-6 py-2 text-[11px] font-black uppercase tracking-widest transition-all',
-                tab === t.value
-                  ? 'bg-black text-white'
-                  : 'text-text-muted hover:text-black hover:bg-black/5'
-              )}
-            >
-              {t.label}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {loading ? (
-        <RankingSkeleton />
-      ) : users.length === 0 ? (
-        <div className="card-donos p-20 text-center animate-fade-in">
-          <div className="text-6xl mb-6">🏜️</div>
-          <h3 className="text-3xl font-bold text-black uppercase text-pixel">Arena Empty</h3>
-          <p className="text-text-secondary text-lg mt-4 italic">Seja o primeiro a deixar sua marca.</p>
-        </div>
-      ) : (
-        <div className="grid gap-4">
-          {users.map((u, i) => {
-            const levelInfo = getLevelForXP(u.xp || 0)
-            const isTop3 = i < 3
-            
-            return (
-              <div
-                key={u.id}
-                className={cn(
-                  'card-donos p-6 group transition-all duration-200',
-                  isTop3 && 'bg-bg-surface ring-2 ring-black ring-offset-2'
-                )}
-              >
-                <div className="flex items-center gap-8">
-                  {/* Rank */}
-                  <div className="w-16 flex items-center justify-center shrink-0">
-                    {isTop3 ? (
-                      <span className="text-4xl">{medals[i]}</span>
-                    ) : (
-                      <span className="text-2xl font-black text-black italic opacity-20 group-hover:opacity-100 transition-opacity">
-                        #{i + 1}
-                      </span>
-                    )}
-                  </div>
-
-                  {/* Profile */}
-                  <div className="relative shrink-0">
-                    <img
-                      src={getAvatarUrl(u.avatar, u.id)}
-                      alt={u.username}
-                      className={cn(
-                        "w-16 h-16 border-2 border-black grayscale transition-all duration-500 group-hover:grayscale-0",
-                        isTop3 && "shadow-[4px_4px_0px_rgba(0,0,0,1)]"
-                      )}
-                    />
-                  </div>
-
-                  {/* Identity */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-4 flex-wrap mb-2">
-                      <span className="text-xl md:text-2xl font-black text-black uppercase tracking-tight truncate">
-                        {u.name || u.username}
-                      </span>
-                      <span className="text-[10px] font-black bg-black text-white px-2 py-0.5 uppercase tracking-widest text-pixel">
-                        {u.path || 'Builder'}
-                      </span>
-                    </div>
-                    <div className="max-w-[200px] border border-black/10 p-0.5">
-                      <XPBar current={levelInfo.xpCurrent} max={levelInfo.xpNext} size="xs" showLabel={false} />
-                    </div>
-                  </div>
-
-                  {/* Score */}
-                  <div className="text-right shrink-0">
-                    <p className="text-3xl md:text-4xl font-black text-black leading-none text-pixel">
-                      {u.xp?.toLocaleString() || 0}
-                    </p>
-                    <p className="text-[10px] font-black text-text-muted uppercase tracking-[0.2em] mt-1">
-                      Total XP Points
-                    </p>
-                  </div>
+          {/* Level List */}
+          <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6 w-full lg:pl-12 lg:border-l border-gray-100">
+            {MOCK_LEVELS.map(l => (
+              <div key={l.level} className="flex items-center gap-4">
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ${
+                  l.level <= user.level 
+                    ? 'bg-[#F2DB76] text-black' // Yellow for unlocked/current
+                    : 'bg-gray-100 text-gray-400 border border-gray-200'
+                }`}>
+                  {l.level <= user.level ? l.level : '🔒'}
+                </div>
+                <div>
+                  <p className="font-bold text-sm text-black">Level {l.level}</p>
+                  <p className="text-[10px] text-gray-500">
+                    {l.unlocks ? `Unlock ${l.unlocks} ` : ''} 
+                    {l.percentage} of members
+                  </p>
                 </div>
               </div>
-            )
-          })}
+            ))}
+          </div>
         </div>
-      )}
+
+        <p className="text-xs text-gray-400 italic">Last updated: Apr 16th 2026 6:40pm</p>
+
+        {/* ── LEADERBOARDS ─────────────────────────────────── */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          
+          {[
+            { title: 'Leaderboard (7-day)', highlight: '+50' },
+            { title: 'Leaderboard (30-day)', highlight: '+208' },
+            { title: 'Leaderboard (all-time)', highlight: '473' },
+          ].map((board, idx) => (
+            <div key={board.title} className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
+              <h3 className="text-lg font-serif font-bold text-black mb-6">{board.title}</h3>
+              
+              <div className="space-y-4">
+                {MOCK_LEADERBOARD.map((item, i) => (
+                  <div key={i} className="flex items-center gap-4 group cursor-pointer">
+                    <div className="w-6 flex justify-center">
+                      {i < 3 ? (
+                        <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-white shadow-sm
+                          ${i === 0 ? 'bg-[#F2DB76]' : i === 1 ? 'bg-[#9CA3AF]' : 'bg-[#CD7F32]'}`}
+                        >
+                          {i + 1}
+                        </div>
+                      ) : (
+                        <span className="text-sm font-bold text-gray-400">{i + 1}</span>
+                      )}
+                    </div>
+                    
+                    <div className="w-10 h-10 rounded-full bg-gray-100 border border-gray-200 flex items-center justify-center font-bold text-xs shrink-0">
+                      {item.name.slice(0, 2).toUpperCase()}
+                    </div>
+                    
+                    <div className="flex-1 min-w-0 flex items-center gap-2">
+                      <p className="font-bold text-sm text-black truncate group-hover:underline">
+                        {item.name}
+                      </p>
+                      {item.isHot && <span className="text-orange-500 text-xs">🔥</span>}
+                    </div>
+                    
+                    <span className="text-sm font-bold text-blue-500">
+                      {idx < 2 ? `+${item.xp}` : item.xp}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+
+        </div>
+
+      </div>
     </div>
   )
 }
