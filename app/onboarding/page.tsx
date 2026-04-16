@@ -35,15 +35,20 @@ export default function OnboardingPage() {
     setError('')
 
     try {
-      const { getClient } = await import('@/lib/pocketbase/client')
-      const pb = getClient()
+      const { getSupabaseClient } = await import('@/lib/supabase/client')
+      const supabase = getSupabaseClient()
 
-      await pb.collection('users').update(user.id, {
-        path,
-        revenue_range: revenueRange,
-        bio,
-        onboarding_completed_at: new Date().toISOString(),
-      })
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          path,
+          revenue_range: revenueRange,
+          bio,
+          onboarding_completed_at: new Date().toISOString(),
+        })
+        .eq('id', user.id)
+
+      if (error) throw error
 
       await refreshUser()
       router.push('/')

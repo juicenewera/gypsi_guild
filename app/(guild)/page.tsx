@@ -7,7 +7,7 @@ import { PostCard } from '@/components/post/PostCard'
 import { PathBadge } from '@/components/ui/PathBadge'
 import { XPBar } from '@/components/ui/XPBar'
 import { FeedSkeleton } from '@/components/ui/Skeleton'
-import { getClient } from '@/lib/pocketbase/client'
+import { getSupabaseClient } from '@/lib/supabase/client'
 import { getLevelForXP } from '@/lib/xp'
 import { getAvatarUrl } from '@/lib/utils'
 import type { Post } from '@/lib/pocketbase/types'
@@ -21,12 +21,15 @@ export default function DashboardPage() {
   const loadRecentPosts = useCallback(async () => {
     try {
       setLoading(true)
-      const pb = getClient()
-      const result = await pb.collection('posts').getList(1, 5, {
-        sort: '-created',
-        expand: 'author,category',
-      })
-      setPosts(result.items as unknown as Post[])
+      const supabase = getSupabaseClient()
+      const { data, error } = await supabase
+        .from('posts')
+        .select('*, profiles!author(*), categories!category(*)')
+        .order('created_at', { ascending: false })
+        .limit(5)
+
+      if (error) throw error
+      setPosts(data as unknown as Post[])
     } catch (err) {
       setPosts([])
     } finally {
