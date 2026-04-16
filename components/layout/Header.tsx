@@ -39,14 +39,14 @@ export function Header() {
       {/* Search */}
       <div className="flex items-center gap-4 flex-1">
         <div className="relative w-full max-w-sm hidden sm:block">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-text-muted" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
           <input
             ref={searchRef}
             type="text"
             placeholder="Search resources... (Ctrl+K)"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="input-donos pl-9 h-9 text-[13px] bg-bg-surface border-none focus:bg-bg-primary focus:ring-1 focus:ring-text-primary transition-all"
+            className="w-full pl-9 pr-4 py-2 bg-gray-50 border border-gray-200 text-black placeholder-gray-400 rounded-lg text-sm focus:outline-none focus:border-blue-500 focus:bg-white focus:ring-1 focus:ring-blue-500 transition-all font-medium"
           />
         </div>
       </div>
