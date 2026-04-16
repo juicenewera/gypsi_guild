@@ -37,19 +37,19 @@ export default function DashboardPage() {
         const { count: postsCount } = await supabase
           .from('posts')
           .select('*', { count: 'exact', head: true })
-          .eq('author', user.id)
+          .eq('author_id', user.id)
 
         // Comments count
         const { count: commentsCount } = await supabase
           .from('comments')
           .select('*', { count: 'exact', head: true })
-          .eq('author', user.id)
+          .eq('author_id', user.id)
 
         // Upvotes sum
         const { data: postsData } = await supabase
           .from('posts')
           .select('upvotes')
-          .eq('author', user.id)
+          .eq('author_id', user.id)
         const upvotesSum = postsData?.reduce((sum, post) => sum + (post.upvotes || 0), 0) || 0
 
         // Ranking
