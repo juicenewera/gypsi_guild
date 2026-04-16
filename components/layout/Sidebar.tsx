@@ -64,8 +64,8 @@ export function Sidebar() {
 
       {/* Bottom — User Section */}
       <div className="px-4 pb-5 pt-3 border-t border-gray-100">
-        <button
-          onClick={logout}
+        <Link
+          href="/perfil"
           className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-gray-50 transition-colors text-left"
         >
           <div className="w-9 h-9 bg-black text-white rounded-full flex items-center justify-center font-bold text-sm flex-shrink-0">
@@ -75,7 +75,7 @@ export function Sidebar() {
             <p className="text-sm font-semibold text-black truncate">{username}</p>
             <p className="text-xs text-gray-400 capitalize">{role}</p>
           </div>
-        </button>
+        </Link>
       </div>
     </aside>
   )
