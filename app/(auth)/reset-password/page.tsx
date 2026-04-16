@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -22,10 +22,39 @@ export default function ResetPasswordPage() {
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
+  const [isReady, setIsReady] = useState(false)
 
   const { register, handleSubmit, formState: { errors } } = useForm({
     resolver: zodResolver(schema)
   })
+
+  // Exchange the reset code for an active session upon landing
+  useEffect(() => {
+    let mounted = true
+    const handleRestore = async () => {
+      const params = new URLSearchParams(window.location.search)
+      const code = params.get('code') || params.get('token_hash')
+      const type = params.get('type')
+      
+      const supabase = getSupabaseClient()
+      
+      if (code) {
+         if (type === 'recovery') {
+            const { error } = await supabase.auth.verifyOtp({ token_hash: code, type: 'recovery' })
+            if (error) {
+               const { error: codeError } = await supabase.auth.exchangeCodeForSession(code)
+               if (codeError && mounted) setError('Código de redefinição inválido ou expirado. Solicite outro.')
+            }
+         } else {
+           const { error } = await supabase.auth.exchangeCodeForSession(code)
+           if (error && mounted) setError('Código de redefinição inválido ou expirado. Solicite outro.')
+         }
+      }
+      if (mounted) setIsReady(true)
+    }
+    handleRestore()
+    return () => { mounted = false }
+  }, [])
 
   const onSubmit = async (data: any) => {
     setError('')
