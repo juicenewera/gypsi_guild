@@ -1,59 +1,53 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { z } from 'zod'
+import * as z from 'zod'
 import { useAuthStore } from '@/store/auth'
-import { Mail, Lock, User, AlertCircle, Zap, Shield, Globe, ChevronRight } from 'lucide-react'
+import { ArrowRight, User, Lock, Mail, AlertCircle } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
-const registerSchema = z.object({
-  username: z.string()
-    .min(3, 'Mínimo 3 caracteres')
-    .max(20, 'Máximo 20 caracteres'),
+const schema = z.object({
   email: z.string().email('Email inválido'),
-  password: z.string().min(8, 'Mínimo 8 caracteres'),
+  password: z.string().min(6, 'Mínimo 6 caracteres'),
+  username: z.string().min(3, 'Mínimo 3 caracteres').max(20, 'Máximo 20 caracteres').regex(/^[a-zA-Z0-9_]+$/, 'Apenas letras, números e underlines'),
   path: z.enum(['ladino', 'mago', 'mercador']),
 })
 
-type RegisterForm = z.infer<typeof registerSchema>
+const PATHS = [
+  { id: 'mago', title: 'Mago', desc: 'Code & Sistemas', color: 'border-purple-200 bg-purple-50 text-purple-700' },
+  { id: 'ladino', title: 'Ladino', desc: 'Vendas & Growth', color: 'border-red-200 bg-red-50 text-red-700' },
+  { id: 'mercador', title: 'Mercador', desc: 'Copy & Ofertas', color: 'border-amber-200 bg-amber-50 text-amber-700' },
+]
 
 export default function RegisterPage() {
-  const { register: registerUser, isLoading, isAuthenticated, initialize, initialized } = useAuthStore()
   const router = useRouter()
   const [error, setError] = useState('')
-  const [selectedPath, setSelectedPath] = useState<'ladino' | 'mago' | 'mercador' | null>(null)
-
-  const { register, handleSubmit, formState: { errors }, setValue } = useForm<RegisterForm>({
-    resolver: zodResolver(registerSchema),
+  const { register: registerUser, isLoading } = useAuthStore()
+  
+  const { register, handleSubmit, watch, setValue, formState: { errors } } = useForm({
+    resolver: zodResolver(schema),
+    defaultValues: {
+      email: '',
+      password: '',
+      username: '',
+      path: 'mago' as 'ladino' | 'mago' | 'mercador'
+    }
   })
 
-  useEffect(() => {
-    initialize()
-  }, [initialize])
+  const selectedPath = watch('path')
 
-  useEffect(() => {
-    if (initialized && isAuthenticated) {
-      router.push('/feed')
-    }
-  }, [initialized, isAuthenticated, router])
-
-  function selectPath(path: 'ladino' | 'mago' | 'mercador') {
-    setSelectedPath(path)
-    setValue('path', path)
-  }
-
-  async function onSubmit(data: RegisterForm) {
+  const onSubmit = async (data: any) => {
     setError('')
     try {
       await registerUser(data.email, data.password, data.username, data.path)
       router.push('/dashboard')
     } catch (err: any) {
       if (err?.message === 'CONFIRM_EMAIL') {
-        setError('Conta criada! Confirme seu email antes de entrar.')
+        setError('Conta criada! Verifique sua caixa de spam para confirmar seu email antes de entrar.')
       } else {
         setError(err?.message || 'Erro ao criar conta. Tente novamente.')
       }
@@ -61,116 +55,119 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="relative min-h-screen overflow-hidden flex items-center justify-center p-6">
-      {/* Background Image */}
-      <img
-        src="/images/heroes/hero-guild.jpg"
-        alt="Guild"
-        className="absolute inset-0 w-full h-full object-cover"
-      />
+    <div className="min-h-screen flex items-center justify-center bg-[#F9FAFB] p-6">
+      
+      <div className="w-full max-w-xl bg-white rounded-2xl border border-gray-100 shadow-sm p-8 sm:p-10 relative overflow-hidden">
+        
+        {/* Subtle decorative glows */}
+        <div className="absolute top-0 right-0 -mr-16 -mt-16 w-48 h-48 bg-purple-500/5 rounded-full blur-3xl pointer-events-none"></div>
+        <div className="absolute bottom-0 left-0 -ml-16 -mb-16 w-48 h-48 bg-amber-500/5 rounded-full blur-3xl pointer-events-none"></div>
 
-      {/* Dark Overlay */}
-      <div className="absolute inset-0 bg-black/70" />
+        <div className="relative z-10">
+          <div className="text-center mb-8">
+            <h1 className="text-3xl font-serif font-black text-black tracking-tight mb-2">Junte-se à Guilda</h1>
+            <p className="text-sm font-medium text-gray-500">
+              Inicie sua jornada validando seus projetos na vida real.
+            </p>
+          </div>
 
-      {/* Content */}
-      <div className="relative z-10 w-full max-w-2xl animate-fade-in">
-        <div className="text-center mb-12">
-          <h1 className="text-6xl font-bold text-white mb-3 tracking-tight">Guild</h1>
-          <p className="text-gray-300 text-lg">Crie sua conta e entre na aventura</p>
-        </div>
-
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
           {error && (
-            <div className="flex items-center gap-3 p-4 bg-red-500/20 border border-red-500/50 rounded-lg text-red-200 text-sm animate-fade-in">
-              <AlertCircle size={18} className="flex-shrink-0" />
+            <div className="mb-6 bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-xl text-sm flex items-start gap-3">
+              <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
               <span>{error}</span>
             </div>
           )}
 
-          {/* Path Selection */}
-          <div className="space-y-4">
-            <label className="block text-sm text-gray-200 font-medium">Escolha sua Linhagem</label>
-            <div className="grid grid-cols-3 gap-3">
-              {[
-                { value: 'ladino' as const, icon: Zap, label: 'LADINO' },
-                { value: 'mago' as const, icon: Shield, label: 'MAGO' },
-                { value: 'mercador' as const, icon: Globe, label: 'MERCADOR' },
-              ].map((p) => (
-                <button
-                  key={p.value}
-                  type="button"
-                  onClick={() => selectPath(p.value)}
-                  className={cn(
-                    'p-6 rounded-xl flex flex-col items-center gap-3 transition-all duration-200 border-2',
-                    selectedPath === p.value
-                      ? 'border-white bg-white/15 text-white shadow-lg'
-                      : 'border-white/20 bg-white/5 text-gray-300 hover:border-white/40'
-                  )}
-                >
-                  <p.icon size={28} />
-                  <span className="text-xs font-bold tracking-wide">{p.label}</span>
-                </button>
-              ))}
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Email */}
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-gray-700 uppercase tracking-wider ml-1">Email</label>
+                <div className="relative">
+                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <input 
+                    {...register('email')}
+                    type="email"
+                    className="w-full bg-gray-50 border border-gray-200 text-black placeholder-gray-400 rounded-xl px-11 py-3 focus:outline-none focus:border-black focus:ring-2 focus:ring-black/10 transition-all font-medium text-sm"
+                    placeholder="seu@email.com"
+                  />
+                </div>
+                {errors.email && <p className="text-red-500 text-xs font-medium ml-1 mt-1">{errors.email.message as string}</p>}
+              </div>
+
+              {/* Senha */}
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-gray-700 uppercase tracking-wider ml-1">Senha secreta</label>
+                <div className="relative">
+                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <input 
+                    {...register('password')}
+                    type="password"
+                    className="w-full bg-gray-50 border border-gray-200 text-black placeholder-gray-400 rounded-xl px-11 py-3 focus:outline-none focus:border-black focus:ring-2 focus:ring-black/10 transition-all font-medium text-sm"
+                    placeholder="••••••••"
+                  />
+                </div>
+                {errors.password && <p className="text-red-500 text-xs font-medium ml-1 mt-1">{errors.password.message as string}</p>}
+              </div>
+              
+              {/* Username */}
+              <div className="space-y-1 md:col-span-2">
+                <label className="text-xs font-bold text-gray-700 uppercase tracking-wider ml-1">Nome de Identificação (Opcional)</label>
+                <div className="relative">
+                  <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <input 
+                    {...register('username')}
+                    className="w-full bg-gray-50 border border-gray-200 text-black placeholder-gray-400 rounded-xl px-11 py-3 focus:outline-none focus:border-black focus:ring-2 focus:ring-black/10 transition-all font-medium text-sm"
+                    placeholder="ex: lucas_dev"
+                  />
+                </div>
+                {errors.username && <p className="text-red-500 text-xs font-medium ml-1 mt-1">{errors.username.message as string}</p>}
+              </div>
             </div>
-            {errors.path && <p className="text-xs text-red-400 font-medium">Linhagem é obrigatória</p>}
-          </div>
 
-          {/* Form Fields */}
-          <div className="grid md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <label className="block text-sm text-gray-200 font-medium">Nome de Usuário</label>
-              <input
-                type="text"
-                {...register('username')}
-                className="w-full px-4 py-3 bg-white/10 text-white rounded-xl outline-none focus:ring-2 focus:ring-white/30 transition-all border border-white/20 placeholder:text-gray-500"
-                placeholder="BuilderX"
-              />
-              {errors.username && <p className="text-xs text-red-400">{errors.username.message}</p>}
+            {/* Path Selection */}
+            <div className="pt-2">
+              <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider ml-1 mb-3">Escolha sua Classe Inicial</label>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                {PATHS.map(p => (
+                  <button
+                    key={p.id}
+                    type="button"
+                    onClick={() => setValue('path', p.id as any)}
+                    className={cn(
+                      "flex flex-col text-left p-4 rounded-xl border-2 transition-all group",
+                      selectedPath === p.id 
+                        ? p.color + ' border-current shadow-md' 
+                        : "bg-white border-gray-100 hover:border-gray-300 text-gray-500 hover:text-black"
+                    )}
+                  >
+                    <span className="font-bold text-sm mb-1">{p.title}</span>
+                    <span className={cn("text-xs font-medium", selectedPath === p.id ? 'opacity-80' : 'text-gray-400')}>{p.desc}</span>
+                  </button>
+                ))}
+              </div>
             </div>
 
-            <div className="space-y-2">
-              <label className="block text-sm text-gray-200 font-medium">Email</label>
-              <input
-                type="email"
-                {...register('email')}
-                className="w-full px-4 py-3 bg-white/10 text-white rounded-xl outline-none focus:ring-2 focus:ring-white/30 transition-all border border-white/20 placeholder:text-gray-500"
-                placeholder="seu@email.com"
-              />
-              {errors.email && <p className="text-xs text-red-400">{errors.email.message}</p>}
-            </div>
-          </div>
+            <button 
+              type="submit" 
+              disabled={isLoading}
+              className="w-full flex items-center justify-center gap-2 bg-black text-white rounded-xl py-4 font-bold text-sm tracking-wide shadow-lg hover:shadow-xl hover:-translate-y-0.5 hover:bg-gray-900 disabled:opacity-50 disabled:hover:translate-y-0 disabled:shadow-none transition-all mt-6"
+            >
+              {isLoading ? 'Registrando...' : 'Forjar Acesso'} 
+              {!isLoading && <ArrowRight className="w-4 h-4 items-center mt-0.5" />}
+            </button>
+          </form>
 
-          <div className="space-y-2">
-            <label className="block text-sm text-gray-200 font-medium">Senha</label>
-            <input
-              type="password"
-              {...register('password')}
-              className="w-full px-4 py-3 bg-white/10 text-white rounded-xl outline-none focus:ring-2 focus:ring-white/30 transition-all border border-white/20 placeholder:text-gray-500"
-              placeholder="••••••••••••"
-            />
-            {errors.password && <p className="text-xs text-red-400">{errors.password.message}</p>}
-          </div>
-
-          {/* Submit Button */}
-          <button
-            type="submit"
-            disabled={isLoading || !selectedPath}
-            className="w-full py-3 bg-white text-black rounded-xl font-bold text-base hover:bg-gray-100 disabled:bg-gray-500 disabled:cursor-not-allowed transition-colors mt-8"
-          >
-            {isLoading ? 'Criando conta...' : 'Criar Conta'}
-          </button>
-        </form>
-
-        {/* Footer Links */}
-        <div className="mt-8 text-center">
-          <p className="text-gray-300 text-sm">
-            Já tem conta?{' '}
-            <Link href="/login" className="text-white hover:underline font-medium">
-              Fazer login
+          <p className="mt-8 text-center text-sm font-medium text-gray-500">
+            Já possui acesso?{' '}
+            <Link href="/login" className="text-black font-bold hover:underline">
+              Entre no Grimório
             </Link>
           </p>
         </div>
       </div>
+
     </div>
   )
 }

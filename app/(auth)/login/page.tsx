@@ -5,29 +5,23 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { z } from 'zod'
+import * as z from 'zod'
 import { useAuthStore } from '@/store/auth'
-import { AlertCircle } from 'lucide-react'
+import { ArrowRight, Lock, Mail, AlertCircle } from 'lucide-react'
 
-const loginSchema = z.object({
+const schema = z.object({
   email: z.string().email('Email inválido'),
-  password: z.string().min(8, 'Mínimo 8 caracteres'),
+  password: z.string().min(6, 'Senha deve ter no mínimo 6 caracteres')
 })
 
-type LoginForm = z.infer<typeof loginSchema>
-
 export default function LoginPage() {
-  const { login, isLoading, isAuthenticated, initialize, initialized } = useAuthStore()
   const router = useRouter()
+  const { login, isAuthenticated, isLoading, error: authError, clearError, initialized } = useAuthStore()
   const [error, setError] = useState('')
 
-  const { register, handleSubmit, formState: { errors } } = useForm<LoginForm>({
-    resolver: zodResolver(loginSchema),
+  const { register, handleSubmit, formState: { errors } } = useForm({
+    resolver: zodResolver(schema)
   })
-
-  useEffect(() => {
-    initialize()
-  }, [initialize])
 
   useEffect(() => {
     if (initialized && isAuthenticated) {
@@ -35,96 +29,89 @@ export default function LoginPage() {
     }
   }, [initialized, isAuthenticated, router])
 
-  async function onSubmit(data: LoginForm) {
+  const onSubmit = async (data: any) => {
     setError('')
+    clearError()
     try {
       await login(data.email, data.password)
       router.push('/dashboard')
-    } catch {
-      setError('Email ou senha incorretos. Tente novamente.')
+    } catch (err: any) {
+      setError(err?.message || 'Email ou senha incorretos. Tente novamente.')
     }
   }
 
   return (
-    <div className="relative min-h-screen overflow-hidden flex items-center justify-center p-6">
-      {/* Background Image */}
-      <img
-        src="/images/heroes/hero-guild.jpg"
-        alt="Guild"
-        className="absolute inset-0 w-full h-full object-cover"
-      />
+    <div className="min-h-screen flex items-center justify-center bg-[#F9FAFB] p-6">
+      
+      <div className="w-full max-w-md bg-white rounded-2xl border border-gray-100 shadow-sm p-8 sm:p-10 relative overflow-hidden">
+        
+        {/* Subtle decorative glow */}
+        <div className="absolute top-0 right-0 -mr-16 -mt-16 w-32 h-32 bg-blue-500/10 rounded-full blur-3xl pointer-events-none"></div>
+        <div className="absolute bottom-0 left-0 -ml-16 -mb-16 w-32 h-32 bg-orange-500/10 rounded-full blur-3xl pointer-events-none"></div>
 
-      {/* Dark Overlay */}
-      <div className="absolute inset-0 bg-black/70" />
+        <div className="relative z-10">
+          <div className="text-center mb-10">
+            <h1 className="text-3xl font-serif font-black text-black tracking-tight mb-2">Entrar na Guilda</h1>
+            <p className="text-sm font-medium text-gray-500">
+              Acesse a comunidade dos builders de elite.
+            </p>
+          </div>
 
-      {/* Content */}
-      <div className="relative z-10 w-full max-w-sm animate-fade-in">
-        <div className="text-center mb-12">
-          <h1 className="text-6xl font-bold text-white mb-3 tracking-tight">Guild</h1>
-          <p className="text-gray-300 text-lg">Bem-vindo de volta</p>
-        </div>
-
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-          {error && (
-            <div className="flex items-center gap-3 p-4 bg-red-500/20 border border-red-500/50 rounded-lg text-red-200 text-sm animate-fade-in">
-              <AlertCircle size={18} className="flex-shrink-0" />
-              <span>{error}</span>
+          {(error || authError) && (
+            <div className="mb-6 bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-xl text-sm flex items-start gap-3">
+              <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
+              <span>{error || authError}</span>
             </div>
           )}
 
-          {/* Email */}
-          <div className="space-y-2">
-            <label className="block text-sm text-gray-200 font-medium">Email</label>
-            <input
-              type="email"
-              {...register('email')}
-              className="w-full px-4 py-3 bg-white text-black rounded-xl outline-none focus:ring-2 focus:ring-white/30 transition-all placeholder:text-gray-400"
-              placeholder="seu@email.com"
-            />
-            {errors.email && (
-              <p className="text-xs text-red-400 font-medium">{errors.email.message}</p>
-            )}
-          </div>
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+            <div className="space-y-1">
+              <label className="text-xs font-bold text-gray-700 uppercase tracking-wider ml-1">Email</label>
+              <div className="relative">
+                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <input 
+                  {...register('email')}
+                  type="email"
+                  className="w-full bg-gray-50 border border-gray-200 text-black placeholder-gray-400 rounded-xl px-12 py-3.5 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all font-medium"
+                  placeholder="seu@email.com"
+                />
+              </div>
+              {errors.email && <p className="text-red-500 text-xs font-medium ml-1 mt-1">{errors.email.message as string}</p>}
+            </div>
 
-          {/* Password */}
-          <div className="space-y-2">
-            <label className="block text-sm text-gray-200 font-medium">Senha</label>
-            <input
-              type="password"
-              {...register('password')}
-              className="w-full px-4 py-3 bg-white text-black rounded-xl outline-none focus:ring-2 focus:ring-white/30 transition-all placeholder:text-gray-400"
-              placeholder="••••••••••••"
-            />
-            {errors.password && (
-              <p className="text-xs text-red-400 font-medium">{errors.password.message}</p>
-            )}
-          </div>
+            <div className="space-y-1">
+              <label className="text-xs font-bold text-gray-700 uppercase tracking-wider ml-1">Senha</label>
+              <div className="relative">
+                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <input 
+                  {...register('password')}
+                  type="password"
+                  className="w-full bg-gray-50 border border-gray-200 text-black placeholder-gray-400 rounded-xl px-12 py-3.5 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all font-medium"
+                  placeholder="••••••••"
+                />
+              </div>
+              {errors.password && <p className="text-red-500 text-xs font-medium ml-1 mt-1">{errors.password.message as string}</p>}
+            </div>
 
-          {/* Submit Button */}
-          <button
-            type="submit"
-            disabled={isLoading}
-            className="w-full py-3 bg-black text-white rounded-xl font-bold text-base hover:bg-gray-900 disabled:bg-gray-600 disabled:cursor-not-allowed transition-colors mt-8"
-          >
-            {isLoading ? 'Entrando...' : 'Entrar'}
-          </button>
-        </form>
+            <button 
+              type="submit" 
+              disabled={isLoading}
+              className="w-full flex items-center justify-center gap-2 bg-black text-white rounded-xl py-4 font-bold text-sm tracking-wide shadow-lg hover:shadow-xl hover:-translate-y-0.5 hover:bg-gray-900 disabled:opacity-50 disabled:hover:translate-y-0 disabled:shadow-none transition-all mt-8"
+            >
+              {isLoading ? 'Entrando...' : 'Acessar Guilda'} 
+              {!isLoading && <ArrowRight className="w-4 h-4" />}
+            </button>
+          </form>
 
-        {/* Footer Links */}
-        <div className="mt-8 space-y-3 text-center text-sm">
-          <p className="text-gray-300">
-            Não tem conta?{' '}
-            <Link href="/register" className="text-white hover:underline font-medium">
-              Criar conta
-            </Link>
-          </p>
-          <p>
-            <Link href="/" className="text-gray-300 hover:text-white text-xs flex items-center justify-center gap-1">
-              ← Voltar ao início
+          <p className="mt-8 text-center text-sm font-medium text-gray-500">
+            Ainda não faz parte?{' '}
+            <Link href="/register" className="text-black font-bold hover:underline">
+              Crie seu acesso
             </Link>
           </p>
         </div>
       </div>
+
     </div>
   )
 }
