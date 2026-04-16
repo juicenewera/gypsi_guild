@@ -31,7 +31,7 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (initialized && isAuthenticated) {
-      router.push('/')
+      router.push('/dashboard')
     }
   }, [initialized, isAuthenticated, router])
 
@@ -39,7 +39,7 @@ export default function LoginPage() {
     setError('')
     try {
       await login(data.email, data.password)
-      router.push('/')
+      router.push('/dashboard')
     } catch {
       setError('Email ou senha incorretos. Tente novamente.')
     }

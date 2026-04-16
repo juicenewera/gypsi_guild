@@ -51,7 +51,7 @@ export default function OnboardingPage() {
       if (error) throw error
 
       await refreshUser()
-      router.push('/')
+      router.push('/dashboard')
     } catch (e: any) {
       setError('System error. Please try again.')
       setIsSubmitting(false)

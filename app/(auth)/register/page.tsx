@@ -50,7 +50,7 @@ export default function RegisterPage() {
     setError('')
     try {
       await registerUser(data.email, data.password, data.username, data.path)
-      router.push('/')
+      router.push('/dashboard')
     } catch (err: any) {
       if (err?.message === 'CONFIRM_EMAIL') {
         setError('Conta criada! Confirme seu email antes de entrar.')

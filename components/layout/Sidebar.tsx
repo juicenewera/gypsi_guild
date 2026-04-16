@@ -7,7 +7,7 @@ import { cn } from '@/lib/utils'
 import { useEffect, useState } from 'react'
 
 const mainNav = [
-  { href: '/',        label: 'Dashboard', emoji: '⚡' },
+  { href: '/dashboard', label: 'Dashboard', emoji: '⚡' },
   { href: '/feed',    label: 'Feed',      emoji: '📋' },
   { href: '/cursos',  label: 'Cursos',    emoji: '🎓' },
   { href: '/ranking', label: 'Ranking',   emoji: '🏆' },
@@ -39,8 +39,8 @@ export function Sidebar() {
       {/* Navigation */}
       <nav className="flex-1 px-4 space-y-0.5 overflow-y-auto">
         {mainNav.map(item => {
-          const isActive = item.href === '/'
-            ? pathname === '/'
+          const isActive = item.href === '/dashboard'
+            ? pathname === '/dashboard' || pathname === '/'
             : pathname.startsWith(item.href)
 
           return (
