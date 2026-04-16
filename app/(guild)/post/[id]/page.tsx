@@ -1,302 +1,234 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { useParams } from 'next/navigation'
-import { PixelBadge } from '@/components/ui/PixelBadge'
-import { PathBadge } from '@/components/ui/PathBadge'
-import { PostCardSkeleton } from '@/components/ui/Skeleton'
-import { useAuthStore } from '@/store/auth'
-import { cn, timeAgo, formatCurrency, getAvatarUrl } from '@/lib/utils'
-import { XP_REWARDS } from '@/lib/xp'
-import { ArrowBigUp, MessageSquare, Eye, Zap, Send } from 'lucide-react'
-import type { Post, Comment } from '@/lib/pocketbase/types'
+import { useState } from 'react'
+import Link from 'next/link'
+import { ThumbsUp, MessageSquare, CornerDownRight, MoreHorizontal, Bell } from 'lucide-react'
+
+// MOCK DATA TO AVOID POCKETBASE CRASHES IN DEVELOPMENT
+const MOCK_POST = {
+  id: 'msg-1',
+  author: { name: 'Albert Shiney', avatar: 'https://i.pravatar.cc/150?u=albert', level: 9 },
+  title: 'Sell fully autonomous agents for $15k',
+  body: `I know a couple of dudes...\n\nThey do 1 day of work, where they set this up...\n$15k upfront...\n\nHere's what they are selling:\nhttps://www.youtube.com/watch?v=CmjaOzsTqr4`,
+  category: 'AI Agency Challenge 🤖',
+  timeAgo: '1d (edited)',
+  upvotes: 56,
+  comments_count: 59,
+  videoThumb: 'https://images.unsplash.com/photo-1611162617474-5b21e879e113?auto=format&fit=crop&w=600&q=80', // placeholder
+}
+
+const MOCK_COMMENTS = [
+  {
+    id: 'c1',
+    author: { name: 'Esayas Tesfaye', avatar: 'https://i.pravatar.cc/150?u=esa', level: 4 },
+    timeAgo: '1d',
+    body: 'Wow 🤩',
+    upvotes: 6,
+    replies: [
+      {
+        id: 'r1',
+        author: { name: 'Kunmi Oduola', avatar: 'https://i.pravatar.cc/150?u=kun', level: 7 },
+        timeAgo: '1d',
+        body: '@Esayas Tesfaye Looking good',
+        upvotes: 3,
+      }
+    ]
+  },
+  {
+    id: 'c2',
+    author: { name: 'Lucas_Dev', avatar: 'https://i.pravatar.cc/150?u=luc', level: 5 },
+    timeAgo: '14h',
+    body: 'Where can we find more info about the exact stack they used?',
+    upvotes: 12,
+    replies: []
+  }
+]
 
 export default function PostPage() {
-  const params = useParams()
-  const { user, refreshUser } = useAuthStore()
-  const [post, setPost] = useState<Post | null>(null)
-  const [comments, setComments] = useState<Comment[]>([])
-  const [loading, setLoading] = useState(true)
   const [commentBody, setCommentBody] = useState('')
-  const [submitting, setSubmitting] = useState(false)
-  const [hasUpvoted, setHasUpvoted] = useState(false)
-
-  useEffect(() => {
-    async function load() {
-      try {
-        const { getClient } = await import('@/lib/pocketbase/client')
-        const pb = getClient()
-        const p = await pb.collection('posts').getOne(params.id as string, { expand: 'author,category' })
-        setPost(p as unknown as Post)
-        // Incrementar views
-        await pb.collection('posts').update(params.id as string, { 'views+': 1 })
-        // Carregar comentarios
-        const c = await pb.collection('comments').getFullList({
-          filter: `post = "${params.id}"`,
-          sort: '-created',
-          expand: 'author',
-        })
-        setComments(c as unknown as Comment[])
-        // Verificar upvote
-        if (user) {
-          try {
-            await pb.collection('post_upvotes').getFirstListItem(
-              `user = "${user.id}" && post = "${params.id}"`
-            )
-            setHasUpvoted(true)
-          } catch { /* nao fez upvote */ }
-        }
-      } catch { /* skip */ }
-      setLoading(false)
-    }
-    load()
-  }, [params.id, user])
-
-  async function handleUpvote() {
-    if (!user || !post) return
-    try {
-      const { getClient } = await import('@/lib/pocketbase/client')
-      const pb = getClient()
-      if (hasUpvoted) {
-        const rec = await pb.collection('post_upvotes').getFirstListItem(
-          `user = "${user.id}" && post = "${post.id}"`
-        )
-        await pb.collection('post_upvotes').delete(rec.id)
-        await pb.collection('posts').update(post.id, { upvotes: Math.max(0, (post.upvotes || 0) - 1) })
-        setPost(prev => prev ? { ...prev, upvotes: Math.max(0, (prev.upvotes || 0) - 1) } : null)
-        setHasUpvoted(false)
-      } else {
-        await pb.collection('post_upvotes').create({ user: user.id, post: post.id })
-        await pb.collection('posts').update(post.id, { upvotes: (post.upvotes || 0) + 1 })
-        setPost(prev => prev ? { ...prev, upvotes: (prev.upvotes || 0) + 1 } : null)
-        setHasUpvoted(true)
-      }
-    } catch { /* skip */ }
-  }
-
-  async function handleComment() {
-    if (!user || !post || !commentBody.trim()) return
-    setSubmitting(true)
-    try {
-      const { getClient } = await import('@/lib/pocketbase/client')
-      const pb = getClient()
-      const c = await pb.collection('comments').create(
-        { post: post.id, author: user.id, body: commentBody },
-        { expand: 'author' }
-      )
-      setComments(prev => [c as unknown as Comment, ...prev])
-      setCommentBody('')
-
-      // Atualizar contador de comentarios no post
-      await pb.collection('posts').update(post.id, {
-        comments_count: (post.comments_count || 0) + 1,
-      })
-      setPost(prev => prev ? { ...prev, comments_count: (prev.comments_count || 0) + 1 } : null)
-
-      // Conceder XP ao comentarista
-      await pb.collection('users').update(user.id, { 'xp+': XP_REWARDS.comment })
-      await pb.collection('xp_log').create({
-        user: user.id,
-        amount: XP_REWARDS.comment,
-        reason: 'comment',
-        reference_id: c.id,
-      })
-      await refreshUser()
-    } catch { /* skip */ }
-    setSubmitting(false)
-  }
-
-  if (loading) return <div className="max-w-3xl mx-auto"><PostCardSkeleton /></div>
-
-  if (!post) return (
-    <div className="max-w-3xl mx-auto text-center py-16">
-      <p className="text-sm text-text-muted">Post nao encontrado</p>
-    </div>
-  )
-
-  const author = post.expand?.author
-  const category = post.expand?.category
-  const isAdventure = post.type === 'adventure'
 
   return (
-    <div className="max-w-3xl mx-auto space-y-4">
-      {/* Post */}
-      <article className={cn('card p-6', isAdventure && 'card-guerr')}>
-        {/* Header */}
-        <div className="flex items-start gap-3 mb-4">
-          {author && (
-            <img
-              src={getAvatarUrl(author.avatar, author.id)}
-              alt={author.username}
-              className="w-10 h-10 rounded-full border border-border-default object-cover shrink-0"
-            />
-          )}
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className="text-sm font-medium text-text-primary">
-                {author?.name || author?.username}
-              </span>
-              {author && (
-                <PathBadge path={author.path || 'mago'} level={author.level || 1} className="scale-75 origin-left" />
-              )}
+    <div className="min-h-screen bg-[#F9FAFB] pb-32">
+      
+      {/* ── BACK NAV ──────────────────────────────────────── */}
+      <div className="max-w-4xl mx-auto px-6 pt-6 mb-4">
+        <Link href="/feed" className="text-sm font-semibold text-gray-400 hover:text-black transition-colors">
+          ← Voltar para o Feed
+        </Link>
+      </div>
+
+      <div className="max-w-4xl mx-auto px-6">
+        
+        {/* ── MAIN POST ─────────────────────────────────────── */}
+        <article className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden mb-6">
+          
+          <div className="p-6 md:p-8">
+            {/* Header */}
+            <div className="flex items-start justify-between mb-6">
+              <div className="flex items-center gap-4">
+                
+                {/* Avatar with level badge inside */}
+                <div className="relative">
+                  <img src={MOCK_POST.author.avatar} alt="Avatar" className="w-12 h-12 rounded-full object-cover shadow-sm border border-gray-100" />
+                  <div className="absolute -bottom-1 -right-1 bg-blue-600 text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center border-2 border-white shadow-sm">
+                    {MOCK_POST.author.level}
+                  </div>
+                </div>
+
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="font-bold text-black">{MOCK_POST.author.name}</span>
+                    <span className="text-orange-500 text-sm">👑 ⭐</span>
+                  </div>
+                  <div className="text-[11px] text-gray-500 font-medium">
+                    {MOCK_POST.timeAgo} • <span className="text-gray-600">{MOCK_POST.category}</span>
+                  </div>
+                </div>
+
+              </div>
+
+              <div className="flex items-center gap-2 text-gray-400">
+                <button className="p-2 hover:bg-gray-50 rounded-full transition-colors"><Bell size={18} /></button>
+                <button className="p-2 hover:bg-gray-50 rounded-full transition-colors"><MoreHorizontal size={18} /></button>
+              </div>
             </div>
-            <div className="flex items-center gap-2 text-xs text-text-muted mt-0.5">
-              {category && <span>{category.icon} {category.name}</span>}
-              <span>· {timeAgo(post.created)}</span>
+
+            {/* Title & Body */}
+            <h1 className="text-2xl md:text-3xl font-serif font-bold text-black mb-4">
+              {MOCK_POST.title}
+            </h1>
+            
+            <div className="text-[15px] leading-relaxed text-gray-700 whitespace-pre-wrap mb-6">
+              {MOCK_POST.body}
+            </div>
+
+            {/* Video Thumbnail block */}
+            <div className="w-full max-w-lg h-56 rounded-xl overflow-hidden bg-gray-100 relative mb-8 border border-gray-200 cursor-pointer hover:opacity-90 transition-opacity">
+               <img src={MOCK_POST.videoThumb} alt="Video" className="w-full h-full object-cover" />
+               <div className="absolute inset-0 flex items-center justify-center">
+                 <div className="w-14 h-10 bg-red-600 rounded-lg flex items-center justify-center shadow-lg">
+                   <div className="w-0 h-0 border-t-[6px] border-t-transparent border-l-[10px] border-l-white border-b-[6px] border-b-transparent ml-1"></div>
+                 </div>
+               </div>
+            </div>
+
+            {/* Post Footer / Actions */}
+            <div className="flex items-center gap-4 pt-4 border-t border-gray-100">
+              <button className="flex items-center gap-2 px-4 py-1.5 rounded-full border border-gray-200 text-gray-600 text-sm font-semibold hover:bg-gray-50 transition-colors">
+                <ThumbsUp size={16} /> <span>Like</span> <span className="ml-1 px-1.5 py-0.5 bg-gray-100 rounded text-xs">{MOCK_POST.upvotes}</span>
+              </button>
+              <div className="flex items-center gap-2 text-gray-500 text-sm font-medium">
+                <MessageSquare size={16} /> {MOCK_POST.comments_count} comments
+              </div>
             </div>
           </div>
-          <div className="flex items-center gap-1.5 shrink-0">
-            {isAdventure && <PixelBadge variant="guerreiro" size="sm">⚔️ Adventure</PixelBadge>}
-            {post.is_validated && <PixelBadge variant="xp" size="sm">✓ Validado</PixelBadge>}
-          </div>
-        </div>
+        </article>
 
-        {/* Title */}
-        <h1 className="text-xl font-semibold text-text-primary mb-4">{post.title}</h1>
-
-        {/* Adventure revenue */}
-        {isAdventure && post.revenue_amount && (
-          <div className="flex items-center gap-3 mb-4 p-3 bg-guerr-50 border border-guerr-400 rounded-lg">
-            <span className="text-sm font-semibold text-guerr-600">
-              💰 {formatCurrency(post.revenue_amount)}
-            </span>
-            {post.client_niche && (
-              <PixelBadge variant="default" size="sm">{post.client_niche}</PixelBadge>
-            )}
-            {post.days_to_close && (
-              <span className="text-xs text-text-muted">⏱️ {post.days_to_close} dias</span>
-            )}
-          </div>
-        )}
-
-        {/* Systems used */}
-        {isAdventure && post.system_used?.length > 0 && (
-          <div className="flex gap-1.5 mb-4 flex-wrap">
-            {post.system_used.map(s => (
-              <PixelBadge key={s} variant="mago" size="sm">{s}</PixelBadge>
-            ))}
-          </div>
-        )}
-
-        {/* Validated banner */}
-        {post.is_validated && (
-          <div className="mb-4 p-3 bg-xp-50 border border-xp-400 rounded-lg flex items-center gap-2">
-            <span className="text-sm font-medium text-xp-600">
-              ✓ Adventure Validado pelo Mestre
-            </span>
-          </div>
-        )}
-
-        {/* Body */}
-        <div className="prose max-w-none mb-4 text-sm text-text-secondary leading-relaxed whitespace-pre-wrap">
-          {post.body}
-        </div>
-
-        {/* Tags */}
-        {post.tags?.length > 0 && (
-          <div className="flex gap-1.5 mb-4 flex-wrap">
-            {post.tags.map(t => (
-              <span
-                key={t}
-                className="px-2 py-0.5 text-xs text-text-muted bg-bg-elevated border border-border-subtle rounded-full"
-              >
-                #{t}
-              </span>
-            ))}
-          </div>
-        )}
-
-        {/* Footer stats */}
-        <div className="flex items-center gap-4 pt-3 border-t border-border-subtle">
-          <button
-            onClick={handleUpvote}
-            className={cn(
-              'flex items-center gap-1.5 transition-colors',
-              hasUpvoted ? 'text-mago-500' : 'text-text-muted hover:text-mago-500'
-            )}
-          >
-            <ArrowBigUp className={cn('w-5 h-5', hasUpvoted && 'fill-current')} />
-            <span className="text-sm font-medium">{post.upvotes || 0}</span>
-          </button>
-          <span className="flex items-center gap-1.5 text-text-muted">
-            <MessageSquare className="w-4 h-4" />
-            <span className="text-sm font-medium">{post.comments_count || 0}</span>
-          </span>
-          <span className="flex items-center gap-1.5 text-text-muted">
-            <Eye className="w-4 h-4" />
-            <span className="text-sm font-medium">{post.views || 0}</span>
-          </span>
-          {post.xp_awarded > 0 && (
-            <span className="flex items-center gap-1.5 text-xp-600 ml-auto">
-              <Zap className="w-3.5 h-3.5" />
-              <span className="text-xs font-semibold">+{post.xp_awarded} XP</span>
-            </span>
-          )}
-        </div>
-      </article>
-
-      {/* Caixa de comentario */}
-      {user && (
-        <div className="card p-4">
-          <div className="flex gap-3">
-            <img
-              src={getAvatarUrl(user.avatar, user.id)}
-              alt=""
-              className="w-8 h-8 rounded-full border border-border-default object-cover shrink-0"
-            />
-            <div className="flex-1">
-              <textarea
+        {/* ── COMMENTS COMPONENT OUTPUT ─────────────────────── */}
+        <div className="space-y-4">
+          
+          {/* Create Comment Input */}
+          <div className="flex gap-4">
+            <div className="relative shrink-0">
+               {/* Current User Avatar Placeholder */}
+               <div className="w-10 h-10 rounded-full bg-gray-200 border border-gray-300 flex items-center justify-center font-bold text-gray-500">CI</div>
+               <div className="absolute -bottom-1 -right-1 bg-blue-600 text-white text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center border-2 border-white shadow-sm">8</div>
+            </div>
+            <div className="flex-1 bg-white rounded-2xl border border-gray-200 shadow-sm p-2 flex flex-col">
+              <textarea 
+                className="w-full bg-transparent p-3 outline-none text-sm resize-none text-black placeholder-gray-400"
+                placeholder="Write a comment..."
+                rows={2}
                 value={commentBody}
                 onChange={e => setCommentBody(e.target.value)}
-                rows={3}
-                className="input w-full resize-y"
-                placeholder="Comente..."
               />
-              <div className="flex items-center justify-between mt-2">
-                <span className="text-xs text-text-muted">+{XP_REWARDS.comment} XP ao comentar</span>
-                <button
-                  onClick={handleComment}
-                  disabled={submitting || !commentBody.trim()}
-                  className="btn btn-primary inline-flex items-center gap-1.5 text-sm py-1.5 px-3"
-                >
-                  <Send className="w-3.5 h-3.5" />
-                  {submitting ? 'Enviando...' : 'Enviar'}
+              <div className="flex justify-end p-2 border-t border-gray-50">
+                <button className="px-5 py-2 bg-black text-white text-xs font-bold rounded-full hover:bg-gray-800 transition-colors">
+                  Comment
                 </button>
               </div>
             </div>
           </div>
-        </div>
-      )}
 
-      {/* Lista de comentarios */}
-      <div className="space-y-3 stagger-children">
-        {comments.map(c => {
-          const cAuthor = c.expand?.author
-          return (
-            <div key={c.id} className="card p-4">
-              <div className="flex items-start gap-3">
-                {cAuthor && (
-                  <img
-                    src={getAvatarUrl(cAuthor.avatar, cAuthor.id)}
-                    alt=""
-                    className="w-7 h-7 rounded-full border border-border-default object-cover shrink-0"
-                  />
-                )}
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="text-sm font-medium text-text-primary">
-                      {cAuthor?.name || cAuthor?.username}
-                    </span>
-                    <span className="text-xs text-text-muted">{timeAgo(c.created)}</span>
+          {/* Comments List */}
+          <div className="pt-6 space-y-6">
+            {MOCK_COMMENTS.map(comment => (
+              <div key={comment.id} className="flex gap-4">
+                
+                {/* Avatar */}
+                <div className="relative shrink-0">
+                  <img src={comment.author.avatar} alt="Avatar" className="w-10 h-10 rounded-full object-cover shadow-sm border border-gray-100" />
+                  <div className="absolute -bottom-1 -right-1 bg-blue-600 text-white text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center border-2 border-white shadow-sm">
+                    {comment.author.level}
                   </div>
-                  <p className="text-sm text-text-secondary leading-relaxed whitespace-pre-wrap">
-                    {c.body}
-                  </p>
+                </div>
+
+                <div className="flex-1">
+                  {/* First Line Comment Area */}
+                  <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="font-bold text-black text-sm">{comment.author.name}</span>
+                      <span className="text-[11px] text-gray-400">• {comment.timeAgo}</span>
+                    </div>
+                    <p className="text-[14px] text-gray-800 leading-relaxed whitespace-pre-wrap">
+                      {comment.body}
+                    </p>
+                  </div>
+                  
+                  {/* Actions */}
+                  <div className="flex items-center gap-4 mt-2 px-2">
+                    <button className="flex items-center gap-1.5 text-xs font-bold text-gray-500 hover:text-black transition-colors">
+                      <ThumbsUp size={14} /> {comment.upvotes}
+                    </button>
+                    <button className="text-xs font-bold text-gray-500 hover:text-black transition-colors">
+                      Reply
+                    </button>
+                  </div>
+
+                  {/* Nested Replies */}
+                  {comment.replies && comment.replies.length > 0 && (
+                    <div className="mt-4 pl-4 border-l-2 border-gray-100 space-y-4">
+                      {comment.replies.map(reply => (
+                        <div key={reply.id} className="flex gap-3">
+                          
+                          <div className="relative shrink-0 mt-1">
+                            <img src={reply.author.avatar} alt="Avatar" className="w-8 h-8 rounded-full object-cover shadow-sm border border-gray-100" />
+                            <div className="absolute -bottom-1 -right-1 bg-blue-600 text-white text-[8px] font-bold w-3.5 h-3.5 rounded-full flex items-center justify-center border-2 border-white">
+                              {reply.author.level}
+                            </div>
+                          </div>
+
+                          <div className="flex-1">
+                             <div className="bg-gray-50 rounded-2xl border border-gray-100 p-3">
+                              <div className="flex items-center gap-2 mb-1">
+                                <span className="font-bold text-black text-xs">{reply.author.name}</span>
+                                <span className="text-[10px] text-gray-400">• {reply.timeAgo}</span>
+                              </div>
+                              <p className="text-[13px] text-gray-700 leading-relaxed whitespace-pre-wrap">
+                                {reply.body}
+                              </p>
+                            </div>
+
+                            <div className="flex items-center gap-4 mt-1.5 px-2">
+                              <button className="flex items-center gap-1 text-[11px] font-bold text-gray-500 hover:text-black transition-colors">
+                                <ThumbsUp size={12} /> {reply.upvotes}
+                              </button>
+                              <button className="text-[11px] font-bold text-gray-500 hover:text-black transition-colors">
+                                Reply
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
                 </div>
               </div>
-            </div>
-          )
-        })}
+            ))}
+          </div>
+
+        </div>
       </div>
     </div>
   )
