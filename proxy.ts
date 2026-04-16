@@ -1,7 +1,8 @@
 import { type NextRequest } from "next/server";
-import { createClient } from "@/utils/supabase/middleware";
+import { createClient } from "@/utils/supabase/proxy";
 
-export async function middleware(request: NextRequest) {
+// Next.js 16: renamed from `middleware` to `proxy`
+export function proxy(request: NextRequest) {
   return createClient(request);
 }
 
@@ -12,7 +13,7 @@ export const config = {
      * - _next/static (static files)
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
-     * - public folder
+     * - public folder assets
      */
     "/((?!_next/static|_next/image|favicon.ico|.*\\.png|.*\\.jpg|.*\\.jpeg|.*\\.gif|.*\\.webp|.*\\.svg).*)",
   ],
