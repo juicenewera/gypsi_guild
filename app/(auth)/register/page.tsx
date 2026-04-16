@@ -57,116 +57,114 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="min-h-screen bg-bg-surface flex items-center justify-center p-6">
-      <div className="w-full max-w-2xl animate-fade-in">
-        {/* Header */}
-        <div className="text-center mb-16">
-          <div className="w-12 h-12 bg-black mx-auto mb-6 flex items-center justify-center text-white text-pixel text-2xl">G</div>
-          <h1 className="text-5xl font-normal text-black uppercase tracking-tighter leading-none mb-4">
-            Initialize <br/> Protocol
-          </h1>
-          <p className="text-text-secondary text-lg font-medium italic">Selecione sua linhagem para começar.</p>
+    <div className="relative min-h-screen overflow-hidden flex items-center justify-center p-6">
+      {/* Background Image */}
+      <img
+        src="/images/heroes/hero-guild.jpg"
+        alt="Guild"
+        className="absolute inset-0 w-full h-full object-cover"
+      />
+
+      {/* Dark Overlay */}
+      <div className="absolute inset-0 bg-black/70" />
+
+      {/* Content */}
+      <div className="relative z-10 w-full max-w-2xl animate-fade-in">
+        <div className="text-center mb-12">
+          <h1 className="text-6xl font-bold text-white mb-3 tracking-tight">Guild</h1>
+          <p className="text-gray-300 text-lg">Crie sua conta e entre na aventura</p>
         </div>
 
-        <div className="card-donos p-10 bg-bg-primary">
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-10">
-            {error && (
-              <div className="flex items-center gap-3 p-4 bg-black text-white text-xs font-black uppercase tracking-widest animate-fade-in">
-                <AlertCircle size={16} />
-                {error}
-              </div>
-            )}
-
-            {/* Path Selection */}
-            <div className="space-y-6">
-              <label className="text-[11px] font-black text-gray-900 uppercase tracking-[0.2em]">Lineage Selection</label>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {[
-                  { value: 'ladino' as const, icon: Zap, label: 'LADINO' },
-                  { value: 'mago' as const, icon: Shield, label: 'MAGO' },
-                  { value: 'mercador' as const, icon: Globe, label: 'MERCADOR' },
-                ].map((p) => (
-                  <button
-                    key={p.value}
-                    type="button"
-                    onClick={() => selectPath(p.value)}
-                    className={cn(
-                      'p-6 border-2 flex flex-col items-center gap-4 transition-all duration-200',
-                      selectedPath === p.value
-                        ? 'border-black bg-black text-white shadow-[4px_4px_0px_rgba(0,0,0,0.2)]'
-                        : 'border-black/5 bg-bg-surface text-text-muted hover:border-black/20'
-                    )}
-                  >
-                    <p.icon size={24} />
-                    <span className="text-[11px] font-black tracking-widest">{p.label}</span>
-                  </button>
-                ))}
-              </div>
-              {errors.path && <p className="text-[10px] font-bold text-red-600 uppercase tracking-widest">Protocol error: Lineage required.</p>}
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
+          {error && (
+            <div className="flex items-center gap-3 p-4 bg-red-500/20 border border-red-500/50 rounded-lg text-red-200 text-sm animate-fade-in">
+              <AlertCircle size={18} className="flex-shrink-0" />
+              <span>{error}</span>
             </div>
+          )}
 
-            {/* Form Fields */}
-            <div className="grid md:grid-cols-2 gap-8">
-              <div className="space-y-2">
-                <label className="text-[11px] font-black text-gray-900 uppercase tracking-[0.2em] ml-1">Identity Handle</label>
-                <div className="relative">
-                  <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-600" />
-                  <input
-                    type="text"
-                    {...register('username')}
-                    className="input-donos w-full pl-12 h-14 font-bold uppercase tracking-tight"
-                    placeholder="BUILDER_01"
-                  />
-                </div>
-              </div>
+          {/* Path Selection */}
+          <div className="space-y-4">
+            <label className="block text-sm text-gray-200 font-medium">Escolha sua Linhagem</label>
+            <div className="grid grid-cols-3 gap-3">
+              {[
+                { value: 'ladino' as const, icon: Zap, label: 'LADINO' },
+                { value: 'mago' as const, icon: Shield, label: 'MAGO' },
+                { value: 'mercador' as const, icon: Globe, label: 'MERCADOR' },
+              ].map((p) => (
+                <button
+                  key={p.value}
+                  type="button"
+                  onClick={() => selectPath(p.value)}
+                  className={cn(
+                    'p-6 rounded-xl flex flex-col items-center gap-3 transition-all duration-200 border-2',
+                    selectedPath === p.value
+                      ? 'border-white bg-white/15 text-white shadow-lg'
+                      : 'border-white/20 bg-white/5 text-gray-300 hover:border-white/40'
+                  )}
+                >
+                  <p.icon size={28} />
+                  <span className="text-xs font-bold tracking-wide">{p.label}</span>
+                </button>
+              ))}
+            </div>
+            {errors.path && <p className="text-xs text-red-400 font-medium">Linhagem é obrigatória</p>}
+          </div>
 
-              <div className="space-y-2">
-                <label className="text-[11px] font-black text-gray-900 uppercase tracking-[0.2em] ml-1">Secure Email</label>
-                <div className="relative">
-                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-600" />
-                  <input
-                    type="email"
-                    {...register('email')}
-                    className="input-donos w-full pl-12 h-14 font-bold"
-                    placeholder="admin@elite.com"
-                  />
-                </div>
-              </div>
+          {/* Form Fields */}
+          <div className="grid md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <label className="block text-sm text-gray-200 font-medium">Nome de Usuário</label>
+              <input
+                type="text"
+                {...register('username')}
+                className="w-full px-4 py-3 bg-white/10 text-white rounded-xl outline-none focus:ring-2 focus:ring-white/30 transition-all border border-white/20 placeholder:text-gray-500"
+                placeholder="BuilderX"
+              />
+              {errors.username && <p className="text-xs text-red-400">{errors.username.message}</p>}
             </div>
 
             <div className="space-y-2">
-              <label className="text-[11px] font-black text-gray-900 uppercase tracking-[0.2em] ml-1">Access Key</label>
-              <div className="relative">
-                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-600" />
-                <input
-                  type="password"
-                  {...register('password')}
-                  className="input-donos w-full pl-12 h-14 font-bold"
-                  placeholder="••••••••••••"
-                />
-              </div>
+              <label className="block text-sm text-gray-200 font-medium">Email</label>
+              <input
+                type="email"
+                {...register('email')}
+                className="w-full px-4 py-3 bg-white/10 text-white rounded-xl outline-none focus:ring-2 focus:ring-white/30 transition-all border border-white/20 placeholder:text-gray-500"
+                placeholder="seu@email.com"
+              />
+              {errors.email && <p className="text-xs text-red-400">{errors.email.message}</p>}
             </div>
-
-            <div className="pt-6">
-              <button
-                type="submit"
-                disabled={isLoading || !selectedPath}
-                className="btn-donos btn-donos-primary w-full h-16 text-xl"
-              >
-                {isLoading ? 'SYNCING...' : 'INITIALIZE SYSTEM'}
-                <ChevronRight />
-              </button>
-            </div>
-          </form>
-
-          <div className="mt-10 pt-10 border-t border-black/5 text-center">
-            <p className="text-xs font-bold text-gray-700 uppercase tracking-widest">
-              Already integrated?{' '}
-              <Link href="/login" className="text-black hover:underline decoration-2 underline-offset-4 font-black">
-                Log In
-              </Link>
-            </p>
           </div>
+
+          <div className="space-y-2">
+            <label className="block text-sm text-gray-200 font-medium">Senha</label>
+            <input
+              type="password"
+              {...register('password')}
+              className="w-full px-4 py-3 bg-white/10 text-white rounded-xl outline-none focus:ring-2 focus:ring-white/30 transition-all border border-white/20 placeholder:text-gray-500"
+              placeholder="••••••••••••"
+            />
+            {errors.password && <p className="text-xs text-red-400">{errors.password.message}</p>}
+          </div>
+
+          {/* Submit Button */}
+          <button
+            type="submit"
+            disabled={isLoading || !selectedPath}
+            className="w-full py-3 bg-white text-black rounded-xl font-bold text-base hover:bg-gray-100 disabled:bg-gray-500 disabled:cursor-not-allowed transition-colors mt-8"
+          >
+            {isLoading ? 'Criando conta...' : 'Criar Conta'}
+          </button>
+        </form>
+
+        {/* Footer Links */}
+        <div className="mt-8 text-center">
+          <p className="text-gray-300 text-sm">
+            Já tem conta?{' '}
+            <Link href="/login" className="text-white hover:underline font-medium">
+              Fazer login
+            </Link>
+          </p>
         </div>
       </div>
     </div>
