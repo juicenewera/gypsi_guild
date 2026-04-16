@@ -44,6 +44,12 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
+# AI context and MCP configs
+.mcp.json
+.agents/
+.claude/
+.cursor/
+
 # logs e outputs de setup
 error.log
 error.txt
