@@ -1,151 +1,240 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useAuthStore } from '@/store/auth'
-import { PostCard } from '@/components/post/PostCard'
-import { PathBadge } from '@/components/ui/PathBadge'
-import { XPBar } from '@/components/ui/XPBar'
-import { FeedSkeleton } from '@/components/ui/Skeleton'
 import { getSupabaseClient } from '@/lib/supabase/client'
 import { getLevelForXP } from '@/lib/xp'
-import { getAvatarUrl } from '@/lib/utils'
-import type { Post } from '@/lib/pocketbase/types'
-import { Zap, BookOpen, Flame, ArrowRight, Trophy, Compass } from 'lucide-react'
+import { ArrowRight } from 'lucide-react'
+
+interface Stats {
+  postsCount: number
+  commentsCount: number
+  upvotesSum: number
+  rankingPosition: number | null
+  nextUserName: string | null
+  nextUserXp: number | null
+}
+
+const MISSIONS_PLACEHOLDER = [
+  { id: '1', icon: '⚡', title: 'Missão de boas-vindas', rarity: 'Bronze', xp: 150 },
+  { id: '2', icon: '🎯', title: 'Primeiro agente vivo', rarity: 'Prata', xp: 300 },
+  { id: '3', icon: '🏅', title: 'Missão validada', rarity: 'Ouro', xp: 500 },
+]
 
 export default function DashboardPage() {
-  const { user, refreshUser } = useAuthStore()
-  const [posts, setPosts] = useState<Post[]>([])
+  const { user } = useAuthStore()
+  const [stats, setStats] = useState<Stats | null>(null)
   const [loading, setLoading] = useState(true)
 
-  const loadRecentPosts = useCallback(async () => {
-    try {
-      setLoading(true)
-      const supabase = getSupabaseClient()
-      const { data, error } = await supabase
-        .from('posts')
-        .select('*, profiles!author(*), categories!category(*)')
-        .order('created_at', { ascending: false })
-        .limit(5)
-
-      if (error) throw error
-      setPosts(data as unknown as Post[])
-    } catch (err) {
-      setPosts([])
-    } finally {
-      setLoading(false)
-    }
-  }, [])
-
   useEffect(() => {
-    loadRecentPosts()
-  }, [loadRecentPosts])
+    async function loadStats() {
+      if (!user) return
+      try {
+        const supabase = getSupabaseClient()
+
+        // Posts count
+        const { count: postsCount } = await supabase
+          .from('posts')
+          .select('*', { count: 'exact', head: true })
+          .eq('author', user.id)
+
+        // Comments count
+        const { count: commentsCount } = await supabase
+          .from('comments')
+          .select('*', { count: 'exact', head: true })
+          .eq('author', user.id)
+
+        // Upvotes sum
+        const { data: postsData } = await supabase
+          .from('posts')
+          .select('upvotes')
+          .eq('author', user.id)
+        const upvotesSum = postsData?.reduce((sum, post) => sum + (post.upvotes || 0), 0) || 0
+
+        // Ranking
+        const { data: rankingData } = await supabase
+          .from('profiles')
+          .select('id,xp,username')
+          .order('xp', { ascending: false })
+
+        let rankingPosition: number | null = null
+        let nextUserName: string | null = null
+        let nextUserXp: number | null = null
+
+        if (rankingData) {
+          const userIndex = rankingData.findIndex(u => u.id === user.id)
+          if (userIndex !== -1) {
+            rankingPosition = userIndex + 1
+            if (userIndex > 0) {
+              nextUserName = rankingData[userIndex - 1].username
+              nextUserXp = rankingData[userIndex - 1].xp
+            }
+          }
+        }
+
+        setStats({
+          postsCount: postsCount || 0,
+          commentsCount: commentsCount || 0,
+          upvotesSum,
+          rankingPosition,
+          nextUserName,
+          nextUserXp,
+        })
+      } catch (err) {
+        console.error('Error loading stats:', err)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    loadStats()
+  }, [user])
 
   if (!user) return null
 
   const level = getLevelForXP(user.xp || 0)
   const nextLevelXp = level.xpNext - level.xpCurrent
+  const pathName = user.path?.toUpperCase() || 'BUILDER'
 
   return (
-    <div className="max-w-6xl mx-auto space-y-12 animate-fade-in">
-      {/* ========== HERO SECTION ========== */}
-      <section className="space-y-6">
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-8 border-b-2 border-black">
-          <div className="space-y-4">
-            <h1 className="text-5xl md:text-7xl font-normal text-black uppercase tracking-tighter leading-none">
-              Welcome Back,<br />Builder
-            </h1>
-            <p className="text-xl text-text-secondary italic font-medium">
-              Sua jornada na Guild continua. Cumpra missões, suba de nível e se torne uma lenda.
-            </p>
+    <div className="min-h-screen bg-bg-primary p-6 lg:p-8 animate-fade-in">
+      <div className="max-w-7xl mx-auto space-y-10">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div className="text-xs font-bold text-text-muted uppercase tracking-wider">
+            CIDADÃO DA GUILD · {pathName}
           </div>
-
-          {/* Quick Profile Card */}
-          <div className="card-donos p-6 bg-bg-primary border-2 border-black min-w-[280px] flex-shrink-0">
-            <div className="flex items-center gap-4 mb-4">
-              <img
-                src={getAvatarUrl(user.avatar, user.id)}
-                alt={user.username}
-                className="w-12 h-12 rounded-full border-2 border-black object-cover"
-              />
-              <div className="min-w-0">
-                <p className="font-bold text-black truncate">{user.name || user.username}</p>
-                <p className="text-xs text-text-muted">@{user.username}</p>
-              </div>
-            </div>
-            <PathBadge path={user.path || 'mago'} level={level.level} className="mb-3" />
-            <XPBar current={level.xpCurrent} max={level.xpNext} size="md" showLabel={false} />
-            <p className="text-xs text-text-muted mt-2 text-right">{nextLevelXp} XP para o próximo nível</p>
-          </div>
-        </div>
-      </section>
-
-      {/* ========== STATS GRID ========== */}
-      <section className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {[
-          { icon: Zap, label: 'Adventures', value: user.adventures_count || 0, color: 'border-guerr-300' },
-          { icon: BookOpen, label: 'Missões', value: user.missions_count || 0, color: 'border-mago-300' },
-          { icon: Flame, label: 'Streak', value: `${user.streak_days || 0}d`, color: 'border-xp-400' },
-        ].map((stat) => (
-          <div key={stat.label} className={`card-donos p-6 border-2 ${stat.color} bg-bg-primary`}>
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-black/5 rounded flex items-center justify-center">
-                <stat.icon className="w-6 h-6 text-black" />
-              </div>
-              <div>
-                <p className="text-xs font-black uppercase tracking-widest text-text-muted">{stat.label}</p>
-                <p className="text-3xl font-bold text-black">{stat.value}</p>
-              </div>
-            </div>
-          </div>
-        ))}
-      </section>
-
-      {/* ========== FEATURED SECTION ========== */}
-      <section className="grid md:grid-cols-2 gap-8">
-        {/* Call to Action Cards */}
-        <Link href="/post/new" className="card-donos p-8 bg-black text-white border-2 border-black hover:shadow-[4px_4px_0px_rgba(0,0,0,0.2)] transition-all group">
-          <div className="flex items-start justify-between mb-4">
-            <Compass className="w-6 h-6" />
-            <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-          </div>
-          <h3 className="text-xl font-black uppercase tracking-tight mb-2">Compartilhar Adventure</h3>
-          <p className="text-white/70 text-sm">Mostre seu case, experiência ou resultado. Ganhe XP e reconhecimento.</p>
-        </Link>
-
-        <Link href="/ranking" className="card-donos p-8 border-2 border-black bg-bg-primary hover:shadow-[4px_4px_0px_rgba(0,0,0,0.2)] transition-all group">
-          <div className="flex items-start justify-between mb-4">
-            <Trophy className="w-6 h-6 text-black" />
-            <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-          </div>
-          <h3 className="text-xl font-black uppercase tracking-tight mb-2 text-black">Ranking Mensal</h3>
-          <p className="text-text-secondary text-sm">Veja os top builders do mês. Seja o próximo no pódio.</p>
-        </Link>
-      </section>
-
-      {/* ========== RECENT FEED ========== */}
-      <section className="space-y-6">
-        <div className="flex items-center justify-between pb-4 border-b-2 border-black">
-          <h2 className="text-3xl font-normal text-black uppercase tracking-tighter">Recent Feed</h2>
-          <Link href="/feed" className="text-sm font-black text-black hover:underline decoration-2 underline-offset-4">
-            Ver Tudo →
+          <Link href="/post/new" className="px-4 py-2 bg-white text-black rounded-lg font-bold text-sm hover:bg-gray-100 transition-colors">
+            + Novo Post
           </Link>
         </div>
 
-        {loading && posts.length === 0 ? (
-          <FeedSkeleton />
-        ) : posts.length === 0 ? (
-          <div className="card-donos p-12 text-center">
-            <p className="text-text-secondary italic">Nenhum post ainda. Seja o primeiro a compartilhar!</p>
+        {/* Greeting */}
+        <div className="space-y-2">
+          <h1 className="text-5xl lg:text-6xl font-bold text-text-primary">
+            Olá, {user.name || user.username}.
+          </h1>
+          <p className="text-text-secondary text-lg">
+            Sua jornada continua. O que vamos construir hoje?
+          </p>
+        </div>
+
+        {/* Stats Grid (4 columns) */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          {[
+            { label: 'POSTS', value: stats?.postsCount || 0 },
+            { label: 'COMENTÁRIOS', value: stats?.commentsCount || 0 },
+            { label: 'UPVOTES', value: stats?.upvotesSum || 0 },
+            { label: 'ADVENTURES', value: user.adventures_count || 0 },
+          ].map((stat) => (
+            <div key={stat.label} className="card-donos p-6 text-center">
+              <p className="text-xs font-bold text-text-muted uppercase tracking-wider mb-3">{stat.label}</p>
+              <p className="text-4xl font-bold text-text-primary">{stat.value}</p>
+            </div>
+          ))}
+        </div>
+
+        {/* XP + Ranking Grid (2 columns) */}
+        <div className="grid lg:grid-cols-2 gap-6">
+          {/* XP Evolution Card */}
+          <div className="card-donos p-8">
+            <div className="space-y-6">
+              <div>
+                <div className="flex items-baseline gap-2 mb-2">
+                  <span className="text-6xl font-bold text-text-primary">{level.level}</span>
+                  <span className="text-text-secondary text-lg">NÍVEL</span>
+                </div>
+                <p className="text-2xl font-bold text-text-primary mb-4">{level.title}</p>
+              </div>
+
+              <div className="space-y-2">
+                <div className="w-full bg-bg-elevated rounded-full h-3 overflow-hidden">
+                  <div
+                    className="bg-gradient-to-r from-yellow-400 to-amber-500 h-full transition-all duration-500"
+                    style={{ width: `${Math.min((level.xpCurrent / level.xpNext) * 100, 100)}%` }}
+                  />
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-text-muted text-sm">{level.xpCurrent} / {level.xpNext} XP</span>
+                  <span className="text-text-secondary font-bold">
+                    Faltam {nextLevelXp} XP para o nível {level.level + 1}
+                  </span>
+                </div>
+              </div>
+            </div>
           </div>
-        ) : (
-          <div className="grid gap-6">
-            {posts.map((post) => (
-              <PostCard key={post.id} post={post} />
-            ))}
+
+          {/* Ranking Card */}
+          <div className="card-donos p-8">
+            <div className="space-y-6">
+              <p className="text-xs font-bold text-text-muted uppercase tracking-wider">Posição no Ranking</p>
+
+              {stats?.rankingPosition ? (
+                <>
+                  <div className="py-4 border-b border-border-default">
+                    <p className="text-3xl font-bold text-text-primary mb-2">
+                      #{stats.rankingPosition}
+                    </p>
+                    <p className="text-text-secondary text-base">
+                      Você — {user.xp} XP total
+                    </p>
+                  </div>
+
+                  {stats.nextUserName && (
+                    <div className="py-4">
+                      <p className="text-text-secondary text-sm mb-2">
+                        #{(stats.rankingPosition - 1)} {stats.nextUserName}
+                      </p>
+                      <p className="text-text-muted text-xs">
+                        +{(stats.nextUserXp || 0) - user.xp} XP
+                      </p>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <p className="text-text-muted">Carregando posição...</p>
+              )}
+
+              <Link href="/ranking" className="inline-flex items-center gap-2 text-text-primary hover:text-white transition-colors text-sm font-medium pt-4 border-t border-border-default">
+                Ver ranking completo →
+              </Link>
+            </div>
           </div>
-        )}
-      </section>
+        </div>
+
+        {/* Activity + Missions Grid (2 columns) */}
+        <div className="grid lg:grid-cols-2 gap-6">
+          {/* Activity Section */}
+          <div className="card-donos p-8">
+            <h3 className="text-sm font-bold text-text-muted uppercase tracking-wider mb-6">Atividade Recente</h3>
+            <div className="text-center py-12">
+              <p className="text-text-secondary mb-4">Nenhuma atividade recente</p>
+              <p className="text-text-muted text-sm mb-6">Seus posts e comentários aparecerão aqui.</p>
+              <Link href="/post/new" className="inline-block px-6 py-2 bg-text-primary text-black rounded-lg font-bold text-sm hover:bg-text-secondary transition-colors">
+                Começar agora
+              </Link>
+            </div>
+          </div>
+
+          {/* Missions Section */}
+          <div className="card-donos p-8">
+            <h3 className="text-sm font-bold text-text-muted uppercase tracking-wider mb-6">Próximas Missões</h3>
+            <div className="space-y-3">
+              {MISSIONS_PLACEHOLDER.map((mission) => (
+                <div key={mission.id} className="p-4 bg-bg-elevated rounded-lg flex items-start gap-4 hover:bg-bg-elevated/80 transition-colors cursor-pointer">
+                  <span className="text-2xl flex-shrink-0">{mission.icon}</span>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-text-primary text-sm">{mission.title}</p>
+                    <p className="text-text-muted text-xs mt-1">{mission.rarity} · +{mission.xp} XP</p>
+                  </div>
+                  <ArrowRight className="w-4 h-4 text-text-muted flex-shrink-0 mt-1" />
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   )
 }
