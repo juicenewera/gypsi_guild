@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Disallow: /dashboard
+Disallow: /auth/
+
+Sitemap: https://gypsi.vip/sitemap.xml
