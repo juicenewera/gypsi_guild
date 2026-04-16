@@ -4,6 +4,35 @@ Todas as mudanças significativas neste projeto são documentadas aqui.
 
 ## [Sprint 3] - 2026-04-16
 
+### 🔧 Bug Fixes & Polish
+
+#### Fixed
+- **Hydration Mismatch** — Added `suppressHydrationWarning` to `<body>` element
+  - Caused by browser extensions (Smart Converter, ad blockers)
+  - React now ignores attribute changes made by extensions
+- **Text Contrast Issues** — Improved readability on auth pages (register, login)
+  - Changed labels: `text-black` → `text-gray-900`
+  - Changed icons: `text-text-muted` → `text-gray-600`
+  - Changed footer: `text-text-muted` → `text-gray-700`
+  - All text now visible on white/light backgrounds
+
+#### Added
+- **Test Credentials Document** — `TEST-CREDENTIALS.md`
+  - 3 test users (mago, ladino, mercador)
+  - Complete end-to-end test flow
+  - Verification checklist for each feature
+  - Troubleshooting guide
+- **Detailed Testing Guide** — Step-by-step validation for:
+  - Registration flow
+  - Onboarding (4 steps)
+  - Dashboard home
+  - Post creation & XP
+  - Comments & upvotes
+  - Profile & ranking
+  - Logout
+
+---
+
 ### 🎯 Supabase Integration
 
 #### Added
