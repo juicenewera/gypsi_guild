@@ -6,10 +6,20 @@ Use estas credenciais para testar o fluxo da aplicação.
 
 ## 📝 Test User #1 (Mago)
 
+**IMPORTANTE:** Se receber "System rejection", use um email único adicionando timestamp:
+
 ```
-Email:    teste.mago@guild.com
+Email:    builder.mago.20260416@gmail.com
 Password: Senha@123456
-Username: MagoTeste
+Username: MagoBuilder01
+Classe:   Mago
+```
+
+Ou crie seus próprios:
+```
+Email:    seu-email+test1@gmail.com
+Password: Senha@123456
+Username: TestUser01
 Classe:   Mago
 ```
 
@@ -140,8 +150,17 @@ Verifica:
 ## 🔧 Troubleshooting
 
 ### Erro: "System rejection. Credentials may be already active."
-- Significa que o email já existe no banco
-- Use um email novo ou delete o usuário anterior
+- ✅ **Solução:** O email já foi registrado no Supabase
+- **Opção 1:** Use um email NOVO e ÚNICO:
+  ```
+  seu-email+test-20260416@gmail.com
+  seu-email+test-001@gmail.com
+  seu-email+guild@gmail.com
+  ```
+- **Opção 2:** Acesse o Supabase dashboard e delete o usuário:
+  - https://supabase.com/dashboard/project/smzsdsbddepieznqwnho/auth/users
+  - Encontre o usuário
+  - Delete e tente novamente
 
 ### Erro: Hydration mismatch
 - ✅ Já corrigido com `suppressHydrationWarning`
