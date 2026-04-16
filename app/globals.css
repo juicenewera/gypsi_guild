@@ -1,0 +1,87 @@
+@import "tailwindcss";
+
+/* Fonte pixel local */
+@font-face {
+  font-family: 'Dico';
+  src: url('/fonts/Dico.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Tailwind v4 tokens */
+@theme {
+  --font-pixel: 'Dico', monospace;
+  --font-body: 'Inter', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+  --color-gipsy-dark:   #0A0A0A;
+  --color-gipsy-blue:   #3B82F6;
+  --color-gipsy-glow:   #60A5FA;
+  --color-gipsy-gold:   #F59E0B;
+  --color-gipsy-green:  #10B981;
+  --color-gipsy-purple: #8B5CF6;
+}
+
+:root {
+  --glass-bg:           rgba(255,255,255,0.05);
+  --glass-border:       rgba(255,255,255,0.12);
+  --glass-blur:         12px;
+  --glass-bg-light:     rgba(0,0,0,0.03);
+  --glass-border-light: rgba(0,0,0,0.08);
+}
+
+@layer base {
+  body {
+    font-family: var(--font-body);
+    background: #0A0A0A;
+    color: white;
+    -webkit-font-smoothing: antialiased;
+  }
+}
+
+/* Section backgrounds — explícitos para garantir override do body */
+.section-dark {
+  background-color: #0A0A0A;
+  color: #ffffff;
+}
+
+.section-light {
+  background-color: #ffffff;
+  color: #0A0A0A;
+}
+
+/* Text selection override — assinatura visual */
+.section-dark ::selection  { background: #000; color: #fff; }
+.section-light ::selection { background: #000; color: #fff; }
+
+/* Pixel rendering */
+.pixel-render {
+  image-rendering: pixelated;
+  image-rendering: -moz-crisp-edges;
+  image-rendering: crisp-edges;
+}
+
+/* Glassmorphism base */
+.glass {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+}
+.glass-light {
+  background: var(--glass-bg-light);
+  border: 1px solid var(--glass-border-light);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+}
+
+/* Animações */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes glassShine {
+  from { left: -100%; }
+  to   { left: 100%; }
+}
+.animate-fade-up { animation: fadeUp 0.6s cubic-bezier(0.4,0,0.2,1) forwards; }
