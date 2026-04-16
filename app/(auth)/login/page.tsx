@@ -7,7 +7,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useAuthStore } from '@/store/auth'
-import { Mail, Lock, AlertCircle, ChevronRight } from 'lucide-react'
+import { AlertCircle } from 'lucide-react'
 
 const loginSchema = z.object({
   email: z.string().email('Email inválido'),
@@ -41,81 +41,88 @@ export default function LoginPage() {
       await login(data.email, data.password)
       router.push('/')
     } catch {
-      setError('AUTH_FAILURE: Credentials not recognized by the Guild.')
+      setError('Email ou senha incorretos. Tente novamente.')
     }
   }
 
   return (
-    <div className="min-h-screen bg-bg-surface flex items-center justify-center p-6">
-      <div className="w-full max-w-lg animate-fade-in">
-        {/* Header */}
-        <div className="text-center mb-16">
-          <div className="w-12 h-12 bg-black mx-auto mb-6 flex items-center justify-center text-white text-pixel text-2xl">G</div>
-          <h1 className="text-5xl font-normal text-black uppercase tracking-tighter leading-none mb-4">
-            System <br/> Access
-          </h1>
-          <p className="text-text-secondary text-lg font-medium italic">Synchronize your credentials.</p>
+    <div className="relative min-h-screen overflow-hidden flex items-center justify-center p-6">
+      {/* Background Image */}
+      <img
+        src="/images/heroes/hero-guild.jpg"
+        alt="Guild"
+        className="absolute inset-0 w-full h-full object-cover"
+      />
+
+      {/* Dark Overlay */}
+      <div className="absolute inset-0 bg-black/70" />
+
+      {/* Content */}
+      <div className="relative z-10 w-full max-w-sm animate-fade-in">
+        <div className="text-center mb-12">
+          <h1 className="text-6xl font-bold text-white mb-3 tracking-tight">Guild</h1>
+          <p className="text-gray-300 text-lg">Bem-vindo de volta</p>
         </div>
 
-        <div className="card-donos p-10 bg-bg-primary">
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
-            {error && (
-              <div className="flex items-center gap-3 p-4 bg-black text-white text-xs font-black uppercase tracking-widest animate-fade-in">
-                <AlertCircle size={16} />
-                {error}
-              </div>
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+          {error && (
+            <div className="flex items-center gap-3 p-4 bg-red-500/20 border border-red-500/50 rounded-lg text-red-200 text-sm animate-fade-in">
+              <AlertCircle size={18} className="flex-shrink-0" />
+              <span>{error}</span>
+            </div>
+          )}
+
+          {/* Email */}
+          <div className="space-y-2">
+            <label className="block text-sm text-gray-200 font-medium">Email</label>
+            <input
+              type="email"
+              {...register('email')}
+              className="w-full px-4 py-3 bg-white text-black rounded-xl outline-none focus:ring-2 focus:ring-white/30 transition-all placeholder:text-gray-400"
+              placeholder="seu@email.com"
+            />
+            {errors.email && (
+              <p className="text-xs text-red-400 font-medium">{errors.email.message}</p>
             )}
-
-            {/* Email */}
-            <div className="space-y-2">
-              <label className="text-[11px] font-black text-gray-900 uppercase tracking-[0.2em] ml-1">Secure Email</label>
-              <div className="relative">
-                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted" />
-                <input
-                  type="email"
-                  {...register('email')}
-                  className="input-donos w-full pl-12 h-14 font-bold"
-                  placeholder="admin@elite.com"
-                />
-              </div>
-              {errors.email && <p className="text-[10px] text-red-600 font-bold uppercase tracking-widest">{errors.email.message}</p>}
-            </div>
-
-            {/* Password */}
-            <div className="space-y-2">
-              <label className="text-[11px] font-black text-gray-900 uppercase tracking-[0.2em] ml-1">Access Key</label>
-              <div className="relative">
-                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted" />
-                <input
-                  type="password"
-                  {...register('password')}
-                  className="input-donos w-full pl-12 h-14 font-bold"
-                  placeholder="••••••••••••"
-                />
-              </div>
-              {errors.password && <p className="text-[10px] text-red-600 font-bold uppercase tracking-widest">{errors.password.message}</p>}
-            </div>
-
-            <div className="pt-4">
-              <button
-                type="submit"
-                disabled={isLoading}
-                className="btn-donos btn-donos-primary w-full h-16 text-xl"
-              >
-                {isLoading ? 'SINCING...' : 'ESTABLISH LINK'}
-                <ChevronRight />
-              </button>
-            </div>
-          </form>
-
-          <div className="mt-10 pt-10 border-t border-black/5 text-center">
-            <p className="text-xs font-bold text-gray-700 uppercase tracking-widest">
-              New identity?{' '}
-              <Link href="/register" className="text-black hover:underline decoration-2 underline-offset-4 font-black">
-                Join the Guild
-              </Link>
-            </p>
           </div>
+
+          {/* Password */}
+          <div className="space-y-2">
+            <label className="block text-sm text-gray-200 font-medium">Senha</label>
+            <input
+              type="password"
+              {...register('password')}
+              className="w-full px-4 py-3 bg-white text-black rounded-xl outline-none focus:ring-2 focus:ring-white/30 transition-all placeholder:text-gray-400"
+              placeholder="••••••••••••"
+            />
+            {errors.password && (
+              <p className="text-xs text-red-400 font-medium">{errors.password.message}</p>
+            )}
+          </div>
+
+          {/* Submit Button */}
+          <button
+            type="submit"
+            disabled={isLoading}
+            className="w-full py-3 bg-black text-white rounded-xl font-bold text-base hover:bg-gray-900 disabled:bg-gray-600 disabled:cursor-not-allowed transition-colors mt-8"
+          >
+            {isLoading ? 'Entrando...' : 'Entrar'}
+          </button>
+        </form>
+
+        {/* Footer Links */}
+        <div className="mt-8 space-y-3 text-center text-sm">
+          <p className="text-gray-300">
+            Não tem conta?{' '}
+            <Link href="/register" className="text-white hover:underline font-medium">
+              Criar conta
+            </Link>
+          </p>
+          <p>
+            <Link href="/" className="text-gray-300 hover:text-white text-xs flex items-center justify-center gap-1">
+              ← Voltar ao início
+            </Link>
+          </p>
         </div>
       </div>
     </div>
