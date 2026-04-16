@@ -79,7 +79,7 @@ export default function RegisterPage() {
 
             {/* Path Selection */}
             <div className="space-y-6">
-              <label className="text-[11px] font-black text-black uppercase tracking-[0.2em]">Lineage Selection</label>
+              <label className="text-[11px] font-black text-gray-900 uppercase tracking-[0.2em]">Lineage Selection</label>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {[
                   { value: 'ladino' as const, icon: Zap, label: 'LADINO' },
@@ -108,9 +108,9 @@ export default function RegisterPage() {
             {/* Form Fields */}
             <div className="grid md:grid-cols-2 gap-8">
               <div className="space-y-2">
-                <label className="text-[11px] font-black text-black uppercase tracking-[0.2em] ml-1">Identity Handle</label>
+                <label className="text-[11px] font-black text-gray-900 uppercase tracking-[0.2em] ml-1">Identity Handle</label>
                 <div className="relative">
-                  <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted" />
+                  <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-600" />
                   <input
                     type="text"
                     {...register('username')}
@@ -121,9 +121,9 @@ export default function RegisterPage() {
               </div>
 
               <div className="space-y-2">
-                <label className="text-[11px] font-black text-black uppercase tracking-[0.2em] ml-1">Secure Email</label>
+                <label className="text-[11px] font-black text-gray-900 uppercase tracking-[0.2em] ml-1">Secure Email</label>
                 <div className="relative">
-                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted" />
+                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-600" />
                   <input
                     type="email"
                     {...register('email')}
@@ -135,9 +135,9 @@ export default function RegisterPage() {
             </div>
 
             <div className="space-y-2">
-              <label className="text-[11px] font-black text-black uppercase tracking-[0.2em] ml-1">Access Key</label>
+              <label className="text-[11px] font-black text-gray-900 uppercase tracking-[0.2em] ml-1">Access Key</label>
               <div className="relative">
-                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted" />
+                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-600" />
                 <input
                   type="password"
                   {...register('password')}
@@ -160,7 +160,7 @@ export default function RegisterPage() {
           </form>
 
           <div className="mt-10 pt-10 border-t border-black/5 text-center">
-            <p className="text-xs font-bold text-text-muted uppercase tracking-widest">
+            <p className="text-xs font-bold text-gray-700 uppercase tracking-widest">
               Already integrated?{' '}
               <Link href="/login" className="text-black hover:underline decoration-2 underline-offset-4 font-black">
                 Log In
