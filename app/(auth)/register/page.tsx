@@ -52,7 +52,11 @@ export default function RegisterPage() {
       await registerUser(data.email, data.password, data.username, data.path)
       router.push('/')
     } catch (err: any) {
-      setError('System rejection. Credentials may be already active.')
+      if (err?.message === 'CONFIRM_EMAIL') {
+        setError('Conta criada! Confirme seu email antes de entrar.')
+      } else {
+        setError(err?.message || 'Erro ao criar conta. Tente novamente.')
+      }
     }
   }
 
