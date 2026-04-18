@@ -10,7 +10,7 @@ import { cn } from '@/lib/utils'
 import { XP_REWARDS } from '@/lib/xp'
 import { useSFX } from '@/hooks/use-sfx'
 import type { Category } from '@/lib/pocketbase/types'
-import { AlertCircle, Send, Coins, Target, Rocket, Sparkles } from 'lucide-react'
+import { AlertCircle, Send, Coins, Target, Rocket, Sparkles, Swords, MessageSquare, HelpCircle, Trophy, type LucideIcon } from 'lucide-react'
 
 const postSchema = z.object({
   title: z.string().min(5, 'Mínimo 5 caracteres').max(200),
@@ -25,12 +25,12 @@ const postSchema = z.object({
 
 type PostForm = z.infer<typeof postSchema>
 
-const postTypes = [
-  { value: 'adventure', label: 'Adventure', icon: '⚔️', desc: 'Relato de venda ou ROI' },
-  { value: 'discussion', label: 'Discussão', icon: '💬', desc: 'Estratégia ou insight' },
-  { value: 'question', label: 'Pergunta', icon: '❓', desc: 'Dúvida técnica ou venda' },
-  { value: 'showcase', label: 'Vitrine', icon: '🏆', desc: 'Mostre seu sistema' },
-] as const
+const postTypes: { value: 'adventure' | 'discussion' | 'question' | 'showcase'; label: string; Icon: LucideIcon; desc: string }[] = [
+  { value: 'adventure',  label: 'Adventure',  Icon: Swords,        desc: 'Relato de venda ou ROI' },
+  { value: 'discussion', label: 'Discussão',  Icon: MessageSquare, desc: 'Estratégia ou insight' },
+  { value: 'question',   label: 'Pergunta',   Icon: HelpCircle,    desc: 'Dúvida técnica ou venda' },
+  { value: 'showcase',   label: 'Vitrine',    Icon: Trophy,        desc: 'Mostre seu sistema' },
+]
 
 const niches = [
   'Clínica Médica/Estética', 'Imobiliária', 'Infoproduto', 'Agência de Marketing', 
@@ -310,7 +310,9 @@ export default function NewPostPage() {
                   )}
                 >
                   <div className="flex items-center gap-3">
-                    <span className="text-xl">{t.icon}</span>
+                    <span className="w-8 h-8 rounded-xl bg-white border border-gray-200 flex items-center justify-center shrink-0">
+                      <t.Icon className="w-4 h-4 text-gray-700" strokeWidth={2} />
+                    </span>
                     <div>
                       <p className="text-xs font-bold leading-none mb-1">{t.label}</p>
                       <p className="text-[10px] opacity-70 font-medium">{t.desc}</p>

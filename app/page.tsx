@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import Image from 'next/image'
-import { ArrowRight, Users, Zap, Trophy, Check } from 'lucide-react'
+import { ArrowRight, Users, Zap, Trophy, Check, Star } from 'lucide-react'
 
 function LandingNavbar() {
   return (
@@ -206,7 +206,7 @@ export default function LandingPage() {
               <div key={card.id} className="bg-[#111111] border border-white/5 rounded-2xl p-8 hover:border-white/10 transition-colors">
                 <div className="flex items-center justify-between mb-8">
                   <span className="text-[9px] font-mono text-blue-400 border border-blue-500/30 bg-blue-500/10 px-2 py-0.5 rounded tracking-widest uppercase">Missão Concluída</span>
-                  <span className="text-orange-500 text-xs">✦</span>
+                  <Star className="w-3.5 h-3.5 text-orange-500 fill-orange-500" strokeWidth={1.6} />
                 </div>
                 <p className="text-[10px] font-bold text-gray-600 uppercase tracking-widest mb-3">Desafio</p>
                 <h3 className="text-xl font-serif font-bold text-white italic">{card.title}</h3>

@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { ThumbsUp, MessageSquare, CornerDownRight, MoreHorizontal, Bell } from 'lucide-react'
+import { ThumbsUp, MessageSquare, CornerDownRight, MoreHorizontal, Bell, Crown, Star, Bot } from 'lucide-react'
 
 // MOCK DATA TO AVOID POCKETBASE CRASHES IN DEVELOPMENT
 const MOCK_POST = {
@@ -10,7 +10,7 @@ const MOCK_POST = {
   author: { name: 'Albert Shiney', avatar: 'https://i.pravatar.cc/150?u=albert', level: 9 },
   title: 'Sell fully autonomous agents for $15k',
   body: `I know a couple of dudes...\n\nThey do 1 day of work, where they set this up...\n$15k upfront...\n\nHere's what they are selling:\nhttps://www.youtube.com/watch?v=CmjaOzsTqr4`,
-  category: 'AI Agency Challenge 🤖',
+  category: 'AI Agency Challenge',
   timeAgo: '1d (edited)',
   upvotes: 56,
   comments_count: 59,
@@ -22,7 +22,7 @@ const MOCK_COMMENTS = [
     id: 'c1',
     author: { name: 'Esayas Tesfaye', avatar: 'https://i.pravatar.cc/150?u=esa', level: 4 },
     timeAgo: '1d',
-    body: 'Wow 🤩',
+    body: 'Wow',
     upvotes: 6,
     replies: [
       {
@@ -78,7 +78,10 @@ export default function PostPage() {
                 <div>
                   <div className="flex items-center gap-2">
                     <span className="font-bold text-black">{MOCK_POST.author.name}</span>
-                    <span className="text-orange-500 text-sm">👑 ⭐</span>
+                    <span className="inline-flex items-center gap-1 text-orange-500">
+                      <Crown className="w-3.5 h-3.5 fill-orange-500" strokeWidth={1.6} />
+                      <Star className="w-3.5 h-3.5 fill-orange-500" strokeWidth={1.6} />
+                    </span>
                   </div>
                   <div className="text-[11px] text-gray-500 font-medium">
                     {MOCK_POST.timeAgo} • <span className="text-gray-600">{MOCK_POST.category}</span>

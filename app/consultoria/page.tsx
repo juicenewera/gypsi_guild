@@ -6,6 +6,7 @@ import SectionDark from '@/components/ui/SectionDark'
 import SectionLight from '@/components/ui/SectionLight'
 import PageHero from '@/components/sections/PageHero'
 import CTABanner from '@/components/sections/CTABanner'
+import { Rocket, Building2, Landmark, type LucideIcon } from 'lucide-react'
 
 export const metadata: Metadata = {
   title: 'Consultoria em IA | Gipsy VIP',
@@ -36,19 +37,19 @@ const PILARES = [
   },
 ]
 
-const PERFIS = [
+const PERFIS: { Icon: LucideIcon; title: string; desc: string }[] = [
   {
-    icon: '🚀',
+    Icon: Rocket,
     title: 'Startups',
     desc: 'Você precisa escalar rápido sem contratar mais. A IA pode fazer o trabalho de 3 pessoas desde o início.',
   },
   {
-    icon: '🏢',
+    Icon: Building2,
     title: 'PMEs',
     desc: 'Processos repetitivos, atendimento e vendas podem ser automatizados. Libere seu time para o que realmente importa.',
   },
   {
-    icon: '🏗️',
+    Icon: Landmark,
     title: 'Empresas estabelecidas',
     desc: 'Você tem processos consolidados e quer adicionar IA sem quebrar o que já funciona. É exatamente nosso foco.',
   },
@@ -183,7 +184,9 @@ export default function ConsultoriaPage() {
             <div className="grid md:grid-cols-3 gap-6">
               {PERFIS.map((p) => (
                 <div key={p.title} className="glass-light rounded-2xl p-8 space-y-4 border border-gray-100">
-                  <span className="text-3xl block">{p.icon}</span>
+                  <span className="w-12 h-12 rounded-xl bg-white border border-gray-200 flex items-center justify-center">
+                    <p.Icon className="w-6 h-6 text-gipsy-dark" strokeWidth={1.6} />
+                  </span>
                   <h3 className="[font-family:var(--font-pixel)] text-xs text-gipsy-dark">{p.title}</h3>
                   <p className="text-gray-600 text-sm leading-relaxed">{p.desc}</p>
                 </div>

@@ -5,17 +5,18 @@ import Navbar from '@/components/layout/Navbar'
 import Footer from '@/components/layout/Footer'
 import SectionDark from '@/components/ui/SectionDark'
 import SectionLight from '@/components/ui/SectionLight'
+import { Swords, BookOpen, Cog, Target, type LucideIcon } from 'lucide-react'
 
 export const metadata: Metadata = {
   title: 'Sobre | Gipsy VIP',
   description: 'Conheça a Gipsy VIP, o @cigano.agi e a missão de construir a infraestrutura da era da IA.',
 }
 
-const PILARES = [
+const PILARES: { name: string; href: string; Icon: LucideIcon; color: string; border: string; desc: string }[] = [
   {
     name: 'Guild',
     href: '/guild',
-    icon: '⚔️',
+    Icon: Swords,
     color: 'text-gipsy-green',
     border: 'border-green-200',
     desc: 'Comunidade gratuita de builders de IA com progressão RPG.',
@@ -23,7 +24,7 @@ const PILARES = [
   {
     name: 'Cursos',
     href: '/cursos',
-    icon: '📚',
+    Icon: BookOpen,
     color: 'text-gipsy-blue',
     border: 'border-blue-200',
     desc: 'Educação prática de IA com gamificação e missões reais.',
@@ -31,7 +32,7 @@ const PILARES = [
   {
     name: 'Ventures',
     href: '/ventures',
-    icon: '⚙️',
+    Icon: Cog,
     color: 'text-gipsy-purple',
     border: 'border-purple-200',
     desc: 'Ferramentas de IA construídas para quem trabalha com IA.',
@@ -39,7 +40,7 @@ const PILARES = [
   {
     name: 'Consultoria',
     href: '/consultoria',
-    icon: '🎯',
+    Icon: Target,
     color: 'text-gipsy-gold',
     border: 'border-amber-200',
     desc: 'Diagnóstico e implementação de IA para empresas.',
@@ -152,7 +153,9 @@ export default function SobrePage() {
                 className={`rounded-2xl border-2 ${pilar.border} p-8 space-y-3 hover:shadow-md transition-shadow block`}
               >
                 <div className="flex items-center gap-3">
-                  <span className="text-2xl">{pilar.icon}</span>
+                  <span className="w-10 h-10 rounded-xl bg-white border border-gray-200 flex items-center justify-center shrink-0">
+                    <pilar.Icon className={`w-5 h-5 ${pilar.color}`} strokeWidth={1.8} />
+                  </span>
                   <h3 className={`[font-family:var(--font-pixel)] text-sm ${pilar.color}`}>
                     {pilar.name}
                   </h3>

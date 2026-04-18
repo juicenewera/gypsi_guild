@@ -35,18 +35,10 @@ export function slugify(text: string): string {
     .replace(/(^-|-$)/g, '')
 }
 
-export function getAvatarUrl(avatarFilename: string | null, userId: string, collectionId = 'users'): string {
-  if (!avatarFilename) {
-    return `https://api.dicebear.com/9.x/pixel-art/svg?seed=${userId}&backgroundColor=1a1a35`
-  }
-  const pbUrl = process.env.NEXT_PUBLIC_POCKETBASE_URL || 'http://127.0.0.1:8090'
-  return `${pbUrl}/api/files/${collectionId}/${userId}/${avatarFilename}`
-}
-
-export function getPathIcon(path: 'ladino' | 'mago' | 'mercador'): string {
-  if (path === 'mago') return '🔮'
-  if (path === 'ladino') return '🗡️'
-  return '💰'
+export function getAvatarUrl(avatar: string | null | undefined, userId: string): string {
+  // Supabase guarda a URL completa em avatar_url. Fallback é dicebear pixel-art.
+  if (avatar && /^https?:\/\//.test(avatar)) return avatar
+  return `https://api.dicebear.com/9.x/pixel-art/svg?seed=${userId}&backgroundColor=1a1a35`
 }
 
 export function getPathColor(path: 'ladino' | 'mago' | 'mercador'): string {

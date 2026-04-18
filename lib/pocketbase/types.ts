@@ -2,11 +2,14 @@ export interface Profile {
   id: string
   username: string
   email: string
-  name: string
-  avatar: string
-  bio: string
+  display_name: string | null
+  name: string | null
+  avatar_url: string | null
+  // legacy alias — páginas ainda usam user.avatar em alguns pontos
+  avatar?: string | null
+  bio: string | null
   path: 'ladino' | 'mago' | 'mercador'
-  revenue_range: string
+  revenue_range: string | null
   pain_points: string[]
   hardskills: string[]
   softskills: string[]
@@ -23,9 +26,13 @@ export interface Profile {
   adventures_count: number
   missions_count: number
   streak_days: number
-  last_seen_at: string
+  last_seen_at: string | null
   is_founder: boolean
   is_admin: boolean
+  is_pro: boolean
+  whatsapp: string | null
+  instagram: string | null
+  location: string | null
   created: string
   updated: string
 }

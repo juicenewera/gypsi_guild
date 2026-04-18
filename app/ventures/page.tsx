@@ -7,6 +7,7 @@ import SectionLight from '@/components/ui/SectionLight'
 import PageHero from '@/components/sections/PageHero'
 import CTABanner from '@/components/sections/CTABanner'
 import ButtonRPG from '@/components/ui/ButtonRPG'
+import { Wrench } from 'lucide-react'
 
 export const metadata: Metadata = {
   title: 'Ventures | Gipsy VIP',
@@ -78,7 +79,9 @@ export default function VenturesPage() {
 
             {/* Próximo produto */}
             <div className="rounded-2xl border-2 border-dashed border-gray-200 flex flex-col items-center justify-center p-12 space-y-6 text-center min-h-[400px]">
-              <span className="text-5xl">🔧</span>
+              <span className="w-16 h-16 rounded-2xl bg-white border border-gray-200 flex items-center justify-center">
+                <Wrench className="w-8 h-8 text-gray-500" strokeWidth={1.5} />
+              </span>
               <span className="text-xs font-semibold text-gipsy-gold bg-amber-50 px-3 py-1 rounded-full border border-amber-200">
                 Em Desenvolvimento
               </span>

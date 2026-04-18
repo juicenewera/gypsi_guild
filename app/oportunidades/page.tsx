@@ -5,6 +5,7 @@ import SectionDark from '@/components/ui/SectionDark'
 import SectionLight from '@/components/ui/SectionLight'
 import PageHero from '@/components/sections/PageHero'
 import CTABanner from '@/components/sections/CTABanner'
+import { Target, Zap, Shield, type LucideIcon } from 'lucide-react'
 
 export const metadata: Metadata = {
   title: 'Marketplace de Oportunidades | Gipsy VIP',
@@ -73,19 +74,19 @@ const OPORTUNIDADES = [
   },
 ]
 
-const DIFERENCIAIS_EMPRESA = [
+const DIFERENCIAIS_EMPRESA: { Icon: LucideIcon; title: string; body: string }[] = [
   {
-    icon: '🎯',
+    Icon: Target,
     title: 'Candidatos qualificados',
     body: 'Todos os membros passaram pelo onboarding de classe. Zero perfis genéricos.',
   },
   {
-    icon: '⚡',
+    Icon: Zap,
     title: 'Resposta em 48h',
     body: 'Nossa comunidade é ativa. Vagas preenchidas mais rápido que qualquer board convencional.',
   },
   {
-    icon: '🔒',
+    Icon: Shield,
     title: 'Perfis verificados',
     body: 'XP real, projetos publicados, reputação na comunidade. Você sabe quem está contratando.',
   },
@@ -179,8 +180,10 @@ export default function OportunidadesPage() {
           </div>
           <div className="grid md:grid-cols-3 gap-8">
             {DIFERENCIAIS_EMPRESA.map((d) => (
-              <div key={d.title} className="space-y-3 text-center">
-                <span className="text-3xl block">{d.icon}</span>
+              <div key={d.title} className="space-y-3 text-center flex flex-col items-center">
+                <span className="w-12 h-12 rounded-xl bg-white border border-gray-200 flex items-center justify-center">
+                  <d.Icon className="w-6 h-6 text-gipsy-dark" strokeWidth={1.6} />
+                </span>
                 <h3 className="[font-family:var(--font-pixel)] text-xs text-gipsy-dark">{d.title}</h3>
                 <p className="text-gray-600 text-sm leading-relaxed">{d.body}</p>
               </div>

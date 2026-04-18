@@ -5,20 +5,33 @@ import { usePathname } from 'next/navigation'
 import { useAuthStore } from '@/store/auth'
 import { cn } from '@/lib/utils'
 import { useEffect, useState } from 'react'
+import {
+  Compass,
+  Newspaper,
+  UsersRound,
+  BookOpen,
+  Trophy,
+  Calendar,
+  Swords,
+  type LucideIcon,
+} from 'lucide-react'
+import { FeedbackWidget } from '@/components/feedback/FeedbackWidget'
 
-const mainNav = [
-  { href: '/dashboard', label: 'Dashboard', emoji: '⚡' },
-  { href: '/feed',    label: 'Feed',      emoji: '📋' },
-  { href: '/cursos',  label: 'Cursos',    emoji: '🎓' },
-  { href: '/ranking', label: 'Ranking',   emoji: '🏆' },
-  { href: '/calendario', label: 'Calendário', emoji: '📅' },
-  { href: '/missoes', label: 'Missões',   emoji: '⚔️' },
-  { href: '/chat',    label: 'Chat',      emoji: '💬' },
+type NavItem = { href: string; label: string; Icon: LucideIcon }
+
+const mainNav: NavItem[] = [
+  { href: '/dashboard',  label: 'Dashboard',  Icon: Compass },
+  { href: '/feed',       label: 'Feed',       Icon: Newspaper },
+  { href: '/matilha',    label: 'Matilha',    Icon: UsersRound },
+  { href: '/cursos',     label: 'Cursos',     Icon: BookOpen },
+  { href: '/ranking',    label: 'Ranking',    Icon: Trophy },
+  { href: '/calendario', label: 'Calendário', Icon: Calendar },
+  { href: '/missoes',    label: 'Missões',    Icon: Swords },
 ]
 
 export function Sidebar() {
   const pathname  = usePathname()
-  const { user, logout } = useAuthStore()
+  const { user } = useAuthStore()
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => { setMounted(true) }, [])
@@ -37,17 +50,16 @@ export function Sidebar() {
         <h1 className="text-3xl font-serif font-bold text-black tracking-tight">Guild</h1>
       </div>
 
-      {/* Navigation */}
       <nav className="flex-1 px-4 space-y-0.5 overflow-y-auto">
-        {mainNav.map(item => {
-          const isActive = item.href === '/dashboard'
+        {mainNav.map(({ href, label, Icon }) => {
+          const isActive = href === '/dashboard'
             ? pathname === '/dashboard' || pathname === '/'
-            : pathname.startsWith(item.href)
+            : pathname.startsWith(href)
 
           return (
             <Link
-              key={item.href}
-              href={item.href}
+              key={href}
+              href={href}
               className={cn(
                 'flex items-center gap-3 px-3 py-2.5 rounded-xl text-[15px] font-medium transition-colors',
                 isActive
@@ -55,15 +67,18 @@ export function Sidebar() {
                   : 'text-gray-500 hover:bg-gray-50 hover:text-gray-800'
               )}
             >
-              <span className="text-lg leading-none">{item.emoji}</span>
-              <span>{item.label}</span>
+              <Icon
+                className={cn('w-[18px] h-[18px] flex-shrink-0', isActive ? 'stroke-[2.2]' : 'stroke-[1.6]')}
+                strokeWidth={isActive ? 2.2 : 1.6}
+              />
+              <span>{label}</span>
             </Link>
           )
         })}
       </nav>
 
-      {/* Bottom — User Section */}
-      <div className="px-4 pb-5 pt-3 border-t border-gray-100">
+      <div className="px-4 pb-5 pt-3 border-t border-gray-100 space-y-3">
+        <FeedbackWidget />
         <Link
           href="/perfil"
           className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-gray-50 transition-colors text-left"

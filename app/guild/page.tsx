@@ -5,6 +5,7 @@ import SectionDark from '@/components/ui/SectionDark'
 import SectionLight from '@/components/ui/SectionLight'
 import PageHero from '@/components/sections/PageHero'
 import CTABanner from '@/components/sections/CTABanner'
+import { MessageSquare, Briefcase, Bot, Trophy, type LucideIcon } from 'lucide-react'
 
 export const metadata: Metadata = {
   title: 'Guild — A Comunidade de Builders de IA | Gipsy VIP',
@@ -29,24 +30,24 @@ const STEPS = [
   },
 ]
 
-const FEATURES = [
+const FEATURES: { Icon: LucideIcon; title: string; body: string }[] = [
   {
-    icon: '💬',
+    Icon: MessageSquare,
     title: 'Feed da Comunidade',
     body: 'Cases reais, discussões técnicas, showcase de projetos. Zero ruído, só execução.',
   },
   {
-    icon: '💼',
+    Icon: Briefcase,
     title: 'Mural de Oportunidades',
     body: 'Jobs, freelas e bounties de empresas que já usam IA. Exclusivo para membros verificados.',
   },
   {
-    icon: '🤖',
+    Icon: Bot,
     title: 'Biblioteca de Agentes',
     body: 'Agentes de IA construídos e testados pelos membros. Use, adapte e contribua.',
   },
   {
-    icon: '🏆',
+    Icon: Trophy,
     title: 'Ranking & Conquistas',
     body: 'XP, badges, leaderboard mensal. Seja reconhecido pelo que você constrói.',
   },
@@ -151,7 +152,9 @@ export default function GuildPage() {
           <div className="grid md:grid-cols-2 gap-6">
             {FEATURES.map((item) => (
               <div key={item.title} className="glass rounded-2xl p-6 space-y-3">
-                <span className="text-2xl">{item.icon}</span>
+                <span className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center">
+                  <item.Icon className="w-5 h-5 text-gipsy-gold" strokeWidth={1.6} />
+                </span>
                 <h3 className="[font-family:var(--font-pixel)] text-sm text-gipsy-gold">
                   {item.title}
                 </h3>

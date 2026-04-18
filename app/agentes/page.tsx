@@ -6,19 +6,20 @@ import SectionLight from '@/components/ui/SectionLight'
 import PageHero from '@/components/sections/PageHero'
 import CTABanner from '@/components/sections/CTABanner'
 import ButtonRPG from '@/components/ui/ButtonRPG'
+import { Briefcase, PenLine, BarChart3, Inbox, Cog, Code2, type LucideIcon } from 'lucide-react'
 
 export const metadata: Metadata = {
   title: 'Biblioteca de Agentes de IA | Gipsy VIP',
   description: 'Agentes de IA construídos e testados em batalha pelos membros da Guild. Use, adapte e contribua.',
 }
 
-const CATEGORIES = [
-  { icon: '💼', name: 'Vendas & CRM' },
-  { icon: '✍️', name: 'Copywriting' },
-  { icon: '📊', name: 'Análise de Dados' },
-  { icon: '📬', name: 'Atendimento' },
-  { icon: '⚙️', name: 'Automação' },
-  { icon: '💻', name: 'Desenvolvimento' },
+const CATEGORIES: { Icon: LucideIcon; name: string }[] = [
+  { Icon: Briefcase, name: 'Vendas & CRM' },
+  { Icon: PenLine,   name: 'Copywriting' },
+  { Icon: BarChart3, name: 'Análise de Dados' },
+  { Icon: Inbox,     name: 'Atendimento' },
+  { Icon: Cog,       name: 'Automação' },
+  { Icon: Code2,     name: 'Desenvolvimento' },
 ]
 
 const AGENTS = [
@@ -120,7 +121,9 @@ export default function AgentesPage() {
                 key={cat.name}
                 className="glass-light rounded-2xl p-6 flex items-center gap-4 border border-gray-100 cursor-pointer hover:border-gray-300 transition-colors"
               >
-                <span className="text-2xl">{cat.icon}</span>
+                <span className="w-10 h-10 rounded-xl bg-white border border-gray-200 flex items-center justify-center shrink-0">
+                  <cat.Icon className="w-5 h-5 text-gipsy-dark" strokeWidth={1.8} />
+                </span>
                 <span className="text-gipsy-dark font-semibold text-sm">{cat.name}</span>
               </div>
             ))}

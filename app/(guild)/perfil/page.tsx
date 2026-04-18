@@ -5,7 +5,7 @@ import { PathBadge } from '@/components/ui/PathBadge'
 import { XPBar } from '@/components/ui/XPBar'
 import { getAvatarUrl } from '@/lib/utils'
 import { getLevelForXP, getLevelTitle } from '@/lib/xp'
-import { Swords, BookOpen, Flame, Brain, Zap, ShoppingCart, Database, FileText, Megaphone, LogOut } from 'lucide-react'
+import { Swords, BookOpen, Flame, Brain, Zap, ShoppingCart, Database, FileText, Megaphone, LogOut, MessageCircle, AtSign, Sparkles } from 'lucide-react'
 
 const attributes = [
   { key: 'attr_ai', label: 'AI', icon: Brain, colorClass: 'text-mago-500' },
@@ -41,12 +41,14 @@ export default function ProfilePage() {
         <div className="flex items-start gap-4 mb-6">
           <div className="relative shrink-0">
             <img
-              src={getAvatarUrl(user.avatar, user.id)}
+              src={getAvatarUrl(user.avatar_url ?? user.avatar, user.id)}
               alt={user.username}
               className="w-16 h-16 rounded-full border-2 border-border-default object-cover"
             />
-            <span className="absolute -bottom-1 -right-1 text-lg">
-              {isLadino ? '⚔️' : '🔮'}
+            <span className="absolute -bottom-1 -right-1 w-5 h-5 bg-white border border-gray-200 rounded-full flex items-center justify-center shadow-sm">
+              {isLadino
+                ? <Swords className="w-3 h-3 text-gray-700" strokeWidth={2.2} />
+                : <Sparkles className="w-3 h-3 text-gray-700" strokeWidth={2.2} />}
             </span>
           </div>
           <div className="flex-1 min-w-0">
@@ -114,6 +116,42 @@ export default function ProfilePage() {
           <p className="text-sm text-text-secondary">{user.bio}</p>
         </div>
       )}
+
+      {/* Social / Contato — substitui chat interno */}
+      {(() => {
+        const whatsapp  = ((user as any).whatsapp  || '').replace(/\D/g, '')
+        const instagram = ((user as any).instagram || '').replace(/^@/, '')
+        if (!whatsapp && !instagram) return null
+        return (
+          <div className="card p-4">
+            <h3 className="text-xs font-semibold text-text-muted uppercase tracking-widest mb-3">Contato</h3>
+            <div className="flex flex-wrap gap-2">
+              {whatsapp && (
+                <a
+                  href={`https://wa.me/${whatsapp}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn inline-flex items-center gap-2 text-sm border-emerald-200 text-emerald-700 hover:bg-emerald-50"
+                >
+                  <MessageCircle className="w-4 h-4" />
+                  WhatsApp
+                </a>
+              )}
+              {instagram && (
+                <a
+                  href={`https://instagram.com/${instagram}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn inline-flex items-center gap-2 text-sm border-pink-200 text-pink-700 hover:bg-pink-50"
+                >
+                  <AtSign className="w-4 h-4" />
+                  {instagram}
+                </a>
+              )}
+            </div>
+          </div>
+        )
+      })()}
 
       {/* Logout */}
       <button

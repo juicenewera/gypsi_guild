@@ -1,5 +1,6 @@
-import { cn, getPathIcon } from '@/lib/utils'
+import { cn } from '@/lib/utils'
 import { getLevelTitle } from '@/lib/xp'
+import { Sparkles, Swords, Gem, type LucideIcon } from 'lucide-react'
 
 interface PathBadgeProps {
   path: 'ladino' | 'mago' | 'mercador'
@@ -13,8 +14,14 @@ const pathBadgeClass: Record<string, string> = {
   mercador: 'path-badge-merc',
 }
 
+const pathIcon: Record<string, LucideIcon> = {
+  mago: Sparkles,
+  ladino: Swords,
+  mercador: Gem,
+}
+
 export function PathBadge({ path, level, className }: PathBadgeProps) {
-  const icon = getPathIcon(path)
+  const Icon = pathIcon[path] ?? Sparkles
   const title = getLevelTitle(level, path)
 
   return (
@@ -25,7 +32,7 @@ export function PathBadge({ path, level, className }: PathBadgeProps) {
         className
       )}
     >
-      <span>{icon}</span>
+      <Icon className="w-3.5 h-3.5" strokeWidth={2} />
       <span>{title} Nível {level}</span>
     </div>
   )

@@ -72,7 +72,7 @@ export function Header() {
               <p className="text-[9px] font-bold text-text-muted uppercase tracking-wider mt-1">View Profile</p>
             </div>
             <img
-              src={getAvatarUrl(user.avatar, user.id)}
+              src={getAvatarUrl(user.avatar_url ?? user.avatar, user.id)}
               alt={user.username}
               className="w-7 h-7 rounded-full border border-border-subtle group-hover:border-text-primary transition-colors"
             />

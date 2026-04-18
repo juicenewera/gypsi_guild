@@ -3,15 +3,15 @@
 import { useState, useEffect } from 'react'
 import { useAuthStore } from '@/store/auth'
 import { cn, timeAgo } from '@/lib/utils'
-import { Bell, CheckCheck } from 'lucide-react'
+import { Bell, CheckCheck, ThumbsUp, MessageCircle, Award, Zap, Megaphone, type LucideIcon } from 'lucide-react'
 import type { Notification } from '@/lib/pocketbase/types'
 
-const typeIcons: Record<string, string> = {
-  upvote: '👍',
-  comment: '💬',
-  badge: '🏅',
-  xp: '⚡',
-  mention: '📢',
+const typeIcons: Record<string, LucideIcon> = {
+  upvote:  ThumbsUp,
+  comment: MessageCircle,
+  badge:   Award,
+  xp:      Zap,
+  mention: Megaphone,
 }
 
 export default function NotificationsPage() {
@@ -89,7 +89,14 @@ export default function NotificationsPage() {
               )}
             >
               <div className="flex items-start gap-3">
-                <span className="text-xl shrink-0">{typeIcons[n.type] || '🔔'}</span>
+                {(() => {
+                  const Icon = typeIcons[n.type] ?? Bell
+                  return (
+                    <span className="w-9 h-9 rounded-full bg-gray-50 border border-gray-100 flex items-center justify-center shrink-0">
+                      <Icon className="w-4 h-4 text-gray-600" strokeWidth={2} />
+                    </span>
+                  )
+                })()}
                 <div className="flex-1 min-w-0">
                   <p className={cn(
                     'text-sm font-medium',
