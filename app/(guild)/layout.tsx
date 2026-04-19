@@ -5,6 +5,8 @@ import { useRouter, usePathname } from 'next/navigation'
 import { Sidebar } from '@/components/layout/Sidebar'
 import { Header } from '@/components/layout/Header'
 import { MobileNav } from '@/components/layout/MobileNav'
+import { SplashScreen } from '@/components/layout/SplashScreen'
+import { PageTransition } from '@/components/layout/PageTransition'
 import { useAuthStore } from '@/store/auth'
 
 export default function GuildLayout({ children }: { children: React.ReactNode }) {
@@ -56,11 +58,12 @@ export default function GuildLayout({ children }: { children: React.ReactNode })
 
   return (
     <div className="min-h-screen bg-bg-surface">
+      <SplashScreen />
       <Sidebar />
       <div className="lg:ml-[var(--sidebar-width)]">
         <Header />
         <main className="p-4 lg:p-6 pb-20 lg:pb-6 min-h-[calc(100vh-var(--header-height))]">
-          {children}
+          <PageTransition>{children}</PageTransition>
         </main>
       </div>
       <MobileNav />
