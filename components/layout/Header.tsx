@@ -1,30 +1,24 @@
 'use client'
 
 import Link from 'next/link'
-import { Bell, Search } from 'lucide-react'
+import { Bell, Search, PanelLeftOpen } from 'lucide-react'
 import { useNotificationsStore } from '@/store/notifications'
+import { useUIStore } from '@/store/ui'
 import { useState, useRef, useEffect } from 'react'
 
 export function Header() {
   const { unreadCount } = useNotificationsStore()
-  const [searchOpen, setSearchOpen] = useState(false)
+  const { sidebarCollapsed, hydrated, hydrate, toggleSidebar } = useUIStore()
   const [searchQuery, setSearchQuery] = useState('')
   const searchRef = useRef<HTMLInputElement>(null)
 
-  useEffect(() => {
-    if (searchOpen && searchRef.current) {
-      searchRef.current.focus()
-    }
-  }, [searchOpen])
+  useEffect(() => { hydrate() }, [hydrate])
 
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
       if (e.key === 'k' && (e.metaKey || e.ctrlKey)) {
         e.preventDefault()
-        setSearchOpen(prev => !prev)
-      }
-      if (e.key === 'Escape') {
-        setSearchOpen(false)
+        searchRef.current?.focus()
       }
     }
     window.addEventListener('keydown', handleKeyDown)
@@ -33,8 +27,18 @@ export function Header() {
 
   return (
     <header className="sticky top-0 z-30 h-[var(--header-height)] bg-bg-primary border-b border-border-subtle flex items-center justify-between px-6">
-      {/* Search */}
-      <div className="flex items-center gap-4 flex-1">
+      <div className="flex items-center gap-3 flex-1">
+        {hydrated && sidebarCollapsed && (
+          <button
+            onClick={toggleSidebar}
+            className="hidden lg:inline-flex p-2 rounded-lg text-gray-500 hover:text-black hover:bg-gray-100 transition-colors"
+            aria-label="Abrir menu"
+            title="Abrir menu"
+          >
+            <PanelLeftOpen className="w-4 h-4" strokeWidth={2} />
+          </button>
+        )}
+
         <div className="relative w-full max-w-sm hidden sm:block">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
           <input
@@ -48,7 +52,6 @@ export function Header() {
         </div>
       </div>
 
-      {/* Actions */}
       <div className="flex items-center gap-4">
         <Link
           href="/notificacoes"
@@ -59,7 +62,6 @@ export function Header() {
             <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-text-primary rounded-full border-2 border-bg-primary"></span>
           )}
         </Link>
-
       </div>
     </header>
   )

@@ -8,9 +8,11 @@ import { MobileNav } from '@/components/layout/MobileNav'
 import { SplashScreen } from '@/components/layout/SplashScreen'
 import { PageTransition } from '@/components/layout/PageTransition'
 import { useAuthStore } from '@/store/auth'
+import { useUIStore } from '@/store/ui'
 
 export default function GuildLayout({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, initialized, initialize, user } = useAuthStore()
+  const { sidebarCollapsed, hydrate: hydrateUI } = useUIStore()
   const router = useRouter()
   const pathname = usePathname()
   const [mounted, setMounted] = useState(false)
@@ -18,7 +20,8 @@ export default function GuildLayout({ children }: { children: React.ReactNode })
   useEffect(() => {
     setMounted(true)
     initialize()
-  }, [initialize])
+    hydrateUI()
+  }, [initialize, hydrateUI])
 
   useEffect(() => {
     if (initialized && !isAuthenticated) {
@@ -60,7 +63,7 @@ export default function GuildLayout({ children }: { children: React.ReactNode })
     <div className="min-h-screen bg-bg-surface">
       <SplashScreen />
       <Sidebar />
-      <div className="lg:ml-[var(--sidebar-width)]">
+      <div className={sidebarCollapsed ? '' : 'lg:ml-[var(--sidebar-width)]'}>
         <Header />
         <main className="p-4 lg:p-6 pb-20 lg:pb-6 min-h-[calc(100vh-var(--header-height))]">
           <PageTransition>{children}</PageTransition>

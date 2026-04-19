@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useAuthStore } from '@/store/auth'
+import { useUIStore } from '@/store/ui'
 import { cn } from '@/lib/utils'
 import { useEffect, useState } from 'react'
 import {
@@ -13,6 +14,7 @@ import {
   Trophy,
   Calendar,
   Swords,
+  PanelLeftClose,
   type LucideIcon,
 } from 'lucide-react'
 import { FeedbackWidget } from '@/components/feedback/FeedbackWidget'
@@ -30,12 +32,14 @@ const mainNav: NavItem[] = [
 ]
 
 export function Sidebar() {
-  const pathname  = usePathname()
+  const pathname = usePathname()
   const { user } = useAuthStore()
+  const { sidebarCollapsed, hydrated, hydrate, toggleSidebar } = useUIStore()
   const [mounted, setMounted] = useState(false)
 
-  useEffect(() => { setMounted(true) }, [])
-  if (!mounted || !user) return null
+  useEffect(() => { setMounted(true); hydrate() }, [hydrate])
+  if (!mounted || !user || !hydrated) return null
+  if (sidebarCollapsed) return null
 
   const username = (user as any).username || (user as any).name || 'Usuário'
   const initials = username.slice(0, 2).toUpperCase()
@@ -46,8 +50,16 @@ export function Sidebar() {
   return (
     <aside className="fixed left-0 top-0 bottom-0 w-60 bg-white border-r border-gray-100 z-40 flex-col hidden lg:flex">
 
-      <div className="px-6 pt-8 pb-6">
+      <div className="px-6 pt-8 pb-6 flex items-center justify-between">
         <h1 className="text-3xl font-serif font-bold text-black tracking-tight">Guild</h1>
+        <button
+          onClick={toggleSidebar}
+          className="p-1.5 rounded-lg text-gray-400 hover:text-black hover:bg-gray-100 transition-colors"
+          aria-label="Recolher menu"
+          title="Recolher menu"
+        >
+          <PanelLeftClose className="w-4 h-4" strokeWidth={2} />
+        </button>
       </div>
 
       <nav className="flex-1 px-4 space-y-0.5 overflow-y-auto">
