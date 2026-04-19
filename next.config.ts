@@ -7,6 +7,12 @@ const nextConfig: NextConfig = {
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
     qualities: [70, 70, 70, 70, 70, 70, 70, 70, 70, 70, 70, 70, 70, 70, 70, 70, 70, 70, 75, 85],
   },
+  async redirects() {
+    return [
+      { source: '/matilha',     destination: '/aventureiros', permanent: true },
+      { source: '/matilha/:path*', destination: '/aventureiros/:path*', permanent: true },
+    ]
+  },
 };
 
 export default nextConfig;
