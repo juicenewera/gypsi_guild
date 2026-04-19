@@ -12,8 +12,10 @@ import { fetchProfileByUsername, type PublicProfile } from '@/lib/supabase/queri
 import {
   Swords, BookOpen, Flame, Brain, Zap, ShoppingCart, Database, FileText,
   Megaphone, LogOut, MessageCircle, AtSign, Sparkles, ArrowLeft, Loader2, Gem,
+  Settings, MapPin,
   type LucideIcon,
 } from 'lucide-react'
+import { EditProfileModal } from '@/components/profile/EditProfileModal'
 
 const attributes = [
   { key: 'attr_ai',         label: 'AI',         icon: Brain,        colorClass: 'text-mago-500' },
@@ -44,6 +46,7 @@ type Profile = {
   is_founder?: boolean
   whatsapp?: string | null
   instagram?: string | null
+  location?: string | null
   streak_days?: number
   attr_ai?: number
   attr_automacao?: number
@@ -76,6 +79,7 @@ function ProfilePage() {
   const [other, setOther]     = useState<PublicProfile | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError]     = useState<string | null>(null)
+  const [editing, setEditing] = useState(false)
 
   const isOwn = !u || (user as any)?.username === u
 
@@ -101,8 +105,8 @@ function ProfilePage() {
   if (u && !isOwn && error) {
     return (
       <div className="max-w-3xl mx-auto space-y-4 p-6">
-        <Link href="/matilha" className="inline-flex items-center gap-2 text-sm text-text-muted hover:text-text-primary">
-          <ArrowLeft className="w-4 h-4" /> Voltar para a Matilha
+        <Link href="/aventureiros" className="inline-flex items-center gap-2 text-sm text-text-muted hover:text-text-primary">
+          <ArrowLeft className="w-4 h-4" /> Voltar para Aventureiros
         </Link>
         <div className="card p-12 text-center">
           <p className="text-sm text-text-muted">{error}</p>
@@ -130,14 +134,25 @@ function ProfilePage() {
   return (
     <div className="max-w-3xl mx-auto space-y-6">
       {!isOwn && (
-        <Link href="/matilha" className="inline-flex items-center gap-2 text-sm text-text-muted hover:text-text-primary">
-          <ArrowLeft className="w-4 h-4" /> Voltar para a Matilha
+        <Link href="/aventureiros" className="inline-flex items-center gap-2 text-sm text-text-muted hover:text-text-primary">
+          <ArrowLeft className="w-4 h-4" /> Voltar para Aventureiros
         </Link>
       )}
 
-      <h1 className="font-[family-name:var(--font-heading)] text-2xl font-semibold text-text-primary">
-        {isOwn ? 'Meu Perfil' : `Perfil de ${displayName}`}
-      </h1>
+      <div className="flex items-center justify-between gap-3">
+        <h1 className="font-[family-name:var(--font-heading)] text-2xl font-semibold text-text-primary">
+          {isOwn ? 'Meu Perfil' : `Perfil de ${displayName}`}
+        </h1>
+        {isOwn && (
+          <button
+            onClick={() => setEditing(true)}
+            className="inline-flex items-center gap-2 px-3.5 py-2 rounded-full bg-black text-white text-xs font-bold hover:bg-gray-800 transition-colors shadow-sm"
+          >
+            <Settings className="w-3.5 h-3.5" strokeWidth={2.2} />
+            Configurações
+          </button>
+        )}
+      </div>
 
       {/* Character Sheet */}
       <div className={profile.path === 'ladino' ? 'card card-guerr p-6' : 'card border-mago-400 p-6'}>
@@ -164,6 +179,11 @@ function ProfilePage() {
               )}
             </div>
             <p className="text-sm text-text-muted">@{profile.username}</p>
+            {profile.location && (
+              <p className="text-xs text-text-muted mt-1 inline-flex items-center gap-1">
+                <MapPin className="w-3 h-3" /> {profile.location}
+              </p>
+            )}
             <PathBadge path={profile.path || 'mago'} level={level.level} className="mt-2" />
           </div>
         </div>
@@ -269,6 +289,25 @@ function ProfilePage() {
           <LogOut className="w-4 h-4" />
           Sair da Guilda
         </button>
+      )}
+
+      {isOwn && profile && (
+        <EditProfileModal
+          open={editing}
+          onClose={() => setEditing(false)}
+          initial={{
+            id: profile.id,
+            username: profile.username,
+            display_name: profile.display_name,
+            name: profile.name,
+            bio: profile.bio,
+            avatar_url: profile.avatar_url,
+            avatar: profile.avatar,
+            whatsapp: profile.whatsapp,
+            instagram: profile.instagram,
+            location: profile.location,
+          }}
+        />
       )}
     </div>
   )

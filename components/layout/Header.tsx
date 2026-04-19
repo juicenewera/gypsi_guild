@@ -1,14 +1,11 @@
 'use client'
 
 import Link from 'next/link'
-import { Bell, Search, Plus, Menu } from 'lucide-react'
-import { useAuthStore } from '@/store/auth'
+import { Bell, Search } from 'lucide-react'
 import { useNotificationsStore } from '@/store/notifications'
-import { getAvatarUrl } from '@/lib/utils'
 import { useState, useRef, useEffect } from 'react'
 
 export function Header() {
-  const { user } = useAuthStore()
   const { unreadCount } = useNotificationsStore()
   const [searchOpen, setSearchOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
@@ -63,21 +60,6 @@ export function Header() {
           )}
         </Link>
 
-        <div className="h-4 w-[1px] bg-border-subtle mx-1"></div>
-
-        {user && (
-          <Link href="/perfil" className="flex items-center gap-3 pl-2 group">
-            <div className="text-right hidden md:block">
-              <p className="text-[11px] font-bold text-text-primary leading-none uppercase tracking-tight">{user.name || user.username}</p>
-              <p className="text-[9px] font-bold text-text-muted uppercase tracking-wider mt-1">View Profile</p>
-            </div>
-            <img
-              src={getAvatarUrl(user.avatar_url ?? user.avatar, user.id)}
-              alt={user.username}
-              className="w-7 h-7 rounded-full border border-border-subtle group-hover:border-text-primary transition-colors"
-            />
-          </Link>
-        )}
       </div>
     </header>
   )

@@ -22,7 +22,7 @@ type NavItem = { href: string; label: string; Icon: LucideIcon }
 const mainNav: NavItem[] = [
   { href: '/dashboard',  label: 'Dashboard',  Icon: Compass },
   { href: '/feed',       label: 'Feed',       Icon: Newspaper },
-  { href: '/matilha',    label: 'Matilha',    Icon: UsersRound },
+  { href: '/aventureiros', label: 'Aventureiros', Icon: UsersRound },
   { href: '/cursos',     label: 'Cursos',     Icon: BookOpen },
   { href: '/ranking',    label: 'Ranking',    Icon: Trophy },
   { href: '/calendario', label: 'Calendário', Icon: Calendar },

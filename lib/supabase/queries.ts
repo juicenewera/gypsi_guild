@@ -91,6 +91,7 @@ export type MemberCard = {
   instagram: string | null
   is_pro: boolean
   avatar_url: string | null
+  bio: string | null
 }
 
 export type PostType = 'adventure' | 'discussion' | 'question'
@@ -288,7 +289,7 @@ export async function fetchMatilha() {
   const sb = getSupabaseClient()
   const { data, error } = await sb
     .from('profiles')
-    .select('id, username, display_name, path, level, xp, location, whatsapp, instagram, is_pro, avatar_url')
+    .select('id, username, display_name, path, level, xp, location, whatsapp, instagram, is_pro, avatar_url, bio')
     .order('xp', { ascending: false })
   if (error) return []
   return (data ?? []) as unknown as MemberCard[]
@@ -408,6 +409,51 @@ export async function submitOnboarding(
     p_path: path ?? null,
   })
   if (error) throw new Error(error.message)
+}
+
+// ── PROFILE EDIT / AVATAR UPLOAD ───────────────────────────────────────
+
+export type ProfileUpdate = {
+  display_name?: string | null
+  bio?: string | null
+  whatsapp?: string | null
+  instagram?: string | null
+  location?: string | null
+  avatar_url?: string | null
+}
+
+export async function updateMyProfile(patch: ProfileUpdate) {
+  const sb = getSupabaseClient()
+  const { data: { user } } = await sb.auth.getUser()
+  if (!user) throw new Error('Sessão expirada. Entre novamente.')
+  const { data, error } = await sb
+    .from('profiles')
+    .update(patch)
+    .eq('id', user.id)
+    .select('*')
+    .single()
+  if (error) throw new Error(error.message)
+  return data
+}
+
+export async function uploadAvatar(file: File): Promise<string> {
+  const sb = getSupabaseClient()
+  const { data: { user } } = await sb.auth.getUser()
+  if (!user) throw new Error('Sessão expirada. Entre novamente.')
+  if (file.size > 5 * 1024 * 1024) throw new Error('Imagem muito grande (máx 5 MB).')
+
+  const ext  = (file.name.split('.').pop() || 'png').toLowerCase()
+  const path = `${user.id}/avatar-${Date.now()}.${ext}`
+
+  const { error: upErr } = await sb.storage.from('avatars').upload(path, file, {
+    cacheControl: '3600',
+    upsert: true,
+    contentType: file.type,
+  })
+  if (upErr) throw new Error(upErr.message)
+
+  const { data } = sb.storage.from('avatars').getPublicUrl(path)
+  return data.publicUrl
 }
 
 // ── FEEDBACK ───────────────────────────────────────────────────────────

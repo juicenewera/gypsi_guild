@@ -2,8 +2,11 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { Sparkles, Swords, Gem, Shield, MapPin, MessageCircle, Camera, type LucideIcon } from 'lucide-react'
-import { cn } from '@/lib/utils'
+import {
+  Sparkles, Swords, Gem, Shield, MapPin, MessageCircle, Camera,
+  ArrowUpRight, type LucideIcon,
+} from 'lucide-react'
+import { cn, truncate } from '@/lib/utils'
 import { fetchMatilha, type MemberCard } from '@/lib/supabase/queries'
 
 const PATH_ICON: Record<'mago' | 'ladino' | 'mercador', LucideIcon> = {
@@ -17,9 +20,9 @@ const PATH_COLOR = {
   mercador: 'bg-emerald-50 text-emerald-700 border-emerald-100',
 } as const
 
-export default function MatilhaPage() {
-  const [filter, setFilter] = useState<'todos' | 'mago' | 'ladino' | 'mercador'>('todos')
-  const [search, setSearch] = useState('')
+export default function AventureirosPage() {
+  const [filter, setFilter]   = useState<'todos' | 'mago' | 'ladino' | 'mercador'>('todos')
+  const [search, setSearch]   = useState('')
   const [members, setMembers] = useState<MemberCard[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -35,13 +38,12 @@ export default function MatilhaPage() {
     (search === '' ||
       m.username.toLowerCase().includes(search.toLowerCase()) ||
       (m.display_name || '').toLowerCase().includes(search.toLowerCase()) ||
-      (m.location || '').toLowerCase().includes(search.toLowerCase()))
+      (m.location || '').toLowerCase().includes(search.toLowerCase()) ||
+      (m.bio || '').toLowerCase().includes(search.toLowerCase()))
   )
 
-  // Ranking global: posição baseada em XP (já vem ordenado do backend)
   const rankMap = new Map(members.map((m, idx) => [m.id, idx + 1]))
 
-  // Distribuição geográfica
   const byCity = filtered.reduce<Record<string, number>>((acc, m) => {
     const key = m.location && m.location.trim() ? m.location : 'Não informado'
     acc[key] = (acc[key] || 0) + 1
@@ -53,16 +55,16 @@ export default function MatilhaPage() {
       <div className="max-w-6xl mx-auto space-y-6">
 
         <div>
-          <h1 className="text-4xl lg:text-5xl font-serif font-medium text-black">Matilha</h1>
+          <h1 className="text-4xl lg:text-5xl font-serif font-medium text-black">Aventureiros</h1>
           <p className="text-gray-500 mt-2 text-sm">
-            A guilda inteira num lugar só. Encontre quem constrói perto de você.
+            Conheça quem está construindo junto. Toque em um card para ver o perfil completo.
           </p>
         </div>
 
-        {/* ── DISTRIBUIÇÃO GEOGRÁFICA ──────────────────────── */}
+        {/* Distribuição geográfica */}
         <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
           <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-4">
-            Distribuição da Matilha · {filtered.length} membros
+            Distribuição da Guilda · {filtered.length} aventureiros
           </p>
           <div className="flex flex-wrap gap-3">
             {Object.entries(byCity).sort((a, b) => b[1] - a[1]).map(([city, count]) => (
@@ -75,7 +77,7 @@ export default function MatilhaPage() {
           </div>
         </div>
 
-        {/* ── FILTROS ───────────────────────────────────────── */}
+        {/* Filtros */}
         <div className="flex flex-col md:flex-row gap-3 md:items-center md:justify-between">
           <div className="flex flex-wrap gap-2">
             {(['todos', 'mago', 'ladino', 'mercador'] as const).map(f => {
@@ -101,35 +103,46 @@ export default function MatilhaPage() {
             type="text"
             value={search}
             onChange={e => setSearch(e.target.value)}
-            placeholder="Buscar por nome ou cidade..."
+            placeholder="Buscar por nome, cidade ou descrição..."
             className="px-4 py-2 bg-white border border-gray-200 rounded-full text-sm text-black placeholder:text-gray-400 focus:outline-none focus:border-black transition-colors"
           />
         </div>
 
-        {/* ── MEMBERS GRID ──────────────────────────────────── */}
+        {/* Grid */}
         {loading ? (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
             {Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} className="h-56 bg-white rounded-2xl border border-gray-100 animate-pulse" />
+              <div key={i} className="h-64 bg-white rounded-2xl border border-gray-100 animate-pulse" />
             ))}
           </div>
         ) : filtered.length === 0 ? (
           <div className="bg-white rounded-2xl p-12 text-center border border-gray-100">
-            <p className="text-gray-500 text-sm">Nenhum membro encontrado.</p>
+            <p className="text-gray-500 text-sm">Nenhum aventureiro encontrado.</p>
           </div>
         ) : (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
             {filtered.map(m => {
-              const name  = m.display_name || m.username
-              const rank  = rankMap.get(m.id) || '—'
-              const wa    = (m.whatsapp  || '').replace(/\D/g, '')
-              const insta = (m.instagram || '').replace(/^@/, '')
+              const name     = m.display_name || m.username
+              const rank     = rankMap.get(m.id) || '—'
+              const wa       = (m.whatsapp  || '').replace(/\D/g, '')
+              const insta    = (m.instagram || '').replace(/^@/, '')
               const PathIcon = PATH_ICON[m.path]
+              const headline = m.bio?.trim() || 'Aventureiro da Guilda'
+
               return (
-                <div key={m.id} className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
-                  <div className="flex items-start gap-3 mb-4">
-                    <div className="relative flex-shrink-0">
-                      <div className="w-12 h-12 rounded-full bg-gray-100 border border-gray-200 flex items-center justify-center font-bold text-xs overflow-hidden">
+                <Link
+                  key={m.id}
+                  href={`/perfil?u=${m.username}`}
+                  className="group relative block bg-white rounded-2xl p-5 border border-gray-100 shadow-sm hover:shadow-lg hover:border-gray-200 transition-all"
+                >
+                  <ArrowUpRight
+                    className="absolute top-4 right-4 w-4 h-4 text-gray-300 group-hover:text-black transition-colors"
+                    strokeWidth={2}
+                  />
+
+                  <div className="flex items-start gap-3 mb-3">
+                    <div className="relative shrink-0">
+                      <div className="w-14 h-14 rounded-full bg-gray-100 border border-gray-200 flex items-center justify-center font-bold text-xs overflow-hidden">
                         {m.avatar_url
                           ? <img src={m.avatar_url} alt={name} className="w-full h-full object-cover" />
                           : name.slice(0, 2).toUpperCase()}
@@ -138,18 +151,24 @@ export default function MatilhaPage() {
                         <PathIcon className="w-3 h-3 text-gray-700" strokeWidth={2.2} />
                       </span>
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-bold text-black truncate">{name}</p>
+                    <div className="flex-1 min-w-0 pr-5">
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <p className="text-sm font-bold text-black truncate">{name}</p>
+                        {m.is_pro && (
+                          <span className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-black text-white">
+                            Pro
+                          </span>
+                        )}
+                      </div>
                       <p className="text-xs text-gray-400 truncate">@{m.username}</p>
                     </div>
-                    {m.is_pro && (
-                      <span className="text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-black text-white">
-                        Pro
-                      </span>
-                    )}
                   </div>
 
-                  <div className="flex flex-wrap items-center gap-2 mb-4">
+                  <p className="text-xs text-gray-600 leading-relaxed line-clamp-2 min-h-[32px] mb-3">
+                    {truncate(headline, 110)}
+                  </p>
+
+                  <div className="flex flex-wrap items-center gap-1.5 mb-3">
                     <span className={cn('text-[10px] font-bold px-2 py-0.5 rounded-full border capitalize', PATH_COLOR[m.path])}>
                       {m.path}
                     </span>
@@ -157,16 +176,14 @@ export default function MatilhaPage() {
                       Nv. {m.level}
                     </span>
                     <span className="text-[10px] font-bold text-gray-500 bg-gray-50 border border-gray-100 px-2 py-0.5 rounded-full">
-                      #{rank} no ranking
+                      #{rank}
                     </span>
                   </div>
 
                   {m.location && (
-                    <div className="flex items-center justify-between text-xs text-gray-400 mb-3">
-                      <span className="inline-flex items-center gap-1">
-                        <MapPin className="w-3 h-3" strokeWidth={2} />
-                        {m.location}
-                      </span>
+                    <div className="flex items-center text-xs text-gray-400 mb-3">
+                      <MapPin className="w-3 h-3 mr-1" strokeWidth={2} />
+                      {m.location}
                     </div>
                   )}
 
@@ -176,6 +193,7 @@ export default function MatilhaPage() {
                         href={`https://wa.me/${wa}`}
                         target="_blank"
                         rel="noopener noreferrer"
+                        onClick={e => e.stopPropagation()}
                         className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-600 hover:text-emerald-700"
                       >
                         <MessageCircle className="w-3.5 h-3.5" strokeWidth={2.2} />
@@ -187,20 +205,18 @@ export default function MatilhaPage() {
                         href={`https://instagram.com/${insta}`}
                         target="_blank"
                         rel="noopener noreferrer"
+                        onClick={e => e.stopPropagation()}
                         className="inline-flex items-center gap-1 text-xs font-semibold text-pink-600 hover:text-pink-700"
                       >
                         <Camera className="w-3.5 h-3.5" strokeWidth={2.2} />
                         @{insta}
                       </a>
                     )}
-                    <Link
-                      href={`/perfil?u=${m.username}`}
-                      className="text-xs font-semibold text-gray-500 hover:text-black ml-auto"
-                    >
-                      Ver perfil →
-                    </Link>
+                    <span className="text-xs font-semibold text-gray-400 group-hover:text-black ml-auto transition-colors">
+                      Ver currículo →
+                    </span>
                   </div>
-                </div>
+                </Link>
               )
             })}
           </div>
