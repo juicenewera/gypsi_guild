@@ -285,7 +285,7 @@ export async function fetchProfileByUsername(username: string): Promise<PublicPr
   return data as unknown as PublicProfile
 }
 
-export async function fetchMatilha() {
+export async function fetchAdventurers() {
   const sb = getSupabaseClient()
   const { data, error } = await sb
     .from('profiles')

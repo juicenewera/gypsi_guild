@@ -7,7 +7,7 @@ import {
   ArrowUpRight, type LucideIcon,
 } from 'lucide-react'
 import { cn, truncate } from '@/lib/utils'
-import { fetchMatilha, type MemberCard } from '@/lib/supabase/queries'
+import { fetchAdventurers, type MemberCard } from '@/lib/supabase/queries'
 
 const PATH_ICON: Record<'mago' | 'ladino' | 'mercador', LucideIcon> = {
   mago:     Sparkles,
@@ -27,7 +27,7 @@ export default function AventureirosPage() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    fetchMatilha().then(ms => {
+    fetchAdventurers().then(ms => {
       setMembers(ms)
       setLoading(false)
     })
