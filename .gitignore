@@ -54,3 +54,5 @@ next-env.d.ts
 error.log
 error.txt
 setup_output.txt
+
+.vercel

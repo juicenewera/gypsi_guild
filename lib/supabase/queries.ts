@@ -242,6 +242,48 @@ export async function fetchEventsInMonth(year: number, monthIndex: number) {
   return (data ?? []) as unknown as EventRow[]
 }
 
+export type PublicProfile = {
+  id: string
+  username: string
+  display_name: string | null
+  name: string | null
+  bio: string | null
+  avatar_url: string | null
+  path: 'mago' | 'ladino' | 'mercador' | null
+  level: number
+  xp: number
+  is_pro: boolean
+  is_founder: boolean
+  whatsapp: string | null
+  instagram: string | null
+  location: string | null
+  streak_days: number
+  attr_ai: number
+  attr_automacao: number
+  attr_vendas: number
+  attr_database: number
+  attr_conteudo: number
+  attr_marketing: number
+  adventures_count: number
+  missions_count: number
+}
+
+export async function fetchProfileByUsername(username: string): Promise<PublicProfile | null> {
+  const sb = getSupabaseClient()
+  const { data, error } = await sb
+    .from('profiles')
+    .select(`
+      id, username, display_name, name, bio, avatar_url, path, level, xp,
+      is_pro, is_founder, whatsapp, instagram, location, streak_days,
+      attr_ai, attr_automacao, attr_vendas, attr_database, attr_conteudo, attr_marketing,
+      adventures_count, missions_count
+    `)
+    .eq('username', username)
+    .maybeSingle()
+  if (error || !data) return null
+  return data as unknown as PublicProfile
+}
+
 export async function fetchMatilha() {
   const sb = getSupabaseClient()
   const { data, error } = await sb
