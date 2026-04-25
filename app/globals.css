@@ -21,6 +21,25 @@
   --color-gipsy-gold:   #F59E0B;
   --color-gipsy-green:  #10B981;
   --color-gipsy-purple: #8B5CF6;
+
+  /* shadcn tokens (para button/textarea/tooltip/prompt-input) */
+  --color-background: #FFFFFF;
+  --color-foreground: #0A0A0A;
+  --color-primary: #0A0A0A;
+  --color-primary-foreground: #FFFFFF;
+  --color-secondary: #F3F4F6;
+  --color-secondary-foreground: #111827;
+  --color-muted: #F9FAFB;
+  --color-muted-foreground: #6B7280;
+  --color-accent: #F3F4F6;
+  --color-accent-foreground: #111827;
+  --color-destructive: #EF4444;
+  --color-destructive-foreground: #FFFFFF;
+  --color-border: #E5E7EB;
+  --color-input: #E5E7EB;
+  --color-ring: #3B82F6;
+  --color-popover: #FFFFFF;
+  --color-popover-foreground: #0A0A0A;
 }
 
 :root {

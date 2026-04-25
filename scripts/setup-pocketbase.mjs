@@ -8,9 +8,14 @@
 
 const PB_URL = 'http://127.0.0.1:8090'
 
-// Get admin credentials from args or prompt
-const ADMIN_EMAIL = process.argv[2] || 'admin@guild.com'
-const ADMIN_PASSWORD = process.argv[3] || 'admin12345678'
+// Admin credentials: PB_ADMIN_EMAIL / PB_ADMIN_PASSWORD no env, ou via argv.
+// Sem default — força configuração explícita.
+const ADMIN_EMAIL = process.argv[2] || process.env.PB_ADMIN_EMAIL
+const ADMIN_PASSWORD = process.argv[3] || process.env.PB_ADMIN_PASSWORD
+if (!ADMIN_EMAIL || !ADMIN_PASSWORD) {
+  console.error('Defina PB_ADMIN_EMAIL e PB_ADMIN_PASSWORD no env, ou passe como argv[2]/argv[3].')
+  process.exit(1)
+}
 
 async function api(path, method = 'GET', body = null, token = null) {
   const headers = { 'Content-Type': 'application/json', 'Connection': 'close' }

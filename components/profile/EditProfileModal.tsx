@@ -20,6 +20,12 @@ type Props = {
     whatsapp?: string | null
     instagram?: string | null
     location?: string | null
+    title?: string | null
+    tagline?: string | null
+    email_public?: string | null
+    phone_public?: string | null
+    hobbies?: string[] | null
+    wishlist?: string[] | null
   }
 }
 
@@ -33,6 +39,12 @@ export function EditProfileModal({ open, onClose, initial }: Props) {
   const [instagram,   setInstagram]   = useState(initial.instagram || '')
   const [location,    setLocation]    = useState(initial.location || '')
   const [avatarUrl,   setAvatarUrl]   = useState(initial.avatar_url || initial.avatar || null)
+  const [title,       setTitle]       = useState(initial.title || '')
+  const [tagline,     setTagline]     = useState(initial.tagline || '')
+  const [emailPublic, setEmailPublic] = useState(initial.email_public || '')
+  const [phonePublic, setPhonePublic] = useState(initial.phone_public || '')
+  const [hobbies,     setHobbies]     = useState<string[]>(initial.hobbies ?? [])
+  const [wishlist,    setWishlist]    = useState<string[]>(initial.wishlist ?? [])
 
   const [uploading, setUploading] = useState(false)
   const [saving,    setSaving]    = useState(false)
@@ -66,6 +78,12 @@ export function EditProfileModal({ open, onClose, initial }: Props) {
         instagram:    instagram.trim().replace(/^@/, '') || null,
         location:     location.trim() || null,
         avatar_url:   avatarUrl,
+        title:        title.trim() || null,
+        tagline:      tagline.trim() || null,
+        email_public: emailPublic.trim() || null,
+        phone_public: phonePublic.trim() || null,
+        hobbies,
+        wishlist,
       })
       await refreshUser()
       setDone(true)
@@ -173,6 +191,35 @@ export function EditProfileModal({ open, onClose, initial }: Props) {
           </Field>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <Field label="Título" hint="Ex: Predador, Arquiteta de IA">
+              <input
+                value={title}
+                onChange={e => setTitle(e.target.value)}
+                maxLength={40}
+                placeholder="Seu título de guerra"
+                className={inputCls}
+              />
+            </Field>
+            <Field label="Tagline" hint="Uma frase sua">
+              <input
+                value={tagline}
+                onChange={e => setTagline(e.target.value)}
+                maxLength={100}
+                placeholder="O cara que resolve o impossível"
+                className={inputCls}
+              />
+            </Field>
+          </div>
+
+          <Field label="Hobbies" hint="Enter ou vírgula separa">
+            <ChipsInput value={hobbies} onChange={setHobbies} placeholder="Heavy metal, corrida, vinho..." />
+          </Field>
+
+          <Field label="Wishlist" hint="O que você busca / sonha">
+            <ChipsInput value={wishlist} onChange={setWishlist} placeholder="Sócio técnico, mercado EUA, casa na serra..." />
+          </Field>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Field label="WhatsApp" hint="Apenas números com DDD">
               <input
                 value={whatsapp}
@@ -188,6 +235,24 @@ export function EditProfileModal({ open, onClose, initial }: Props) {
                 onChange={e => setInstagram(e.target.value)}
                 maxLength={40}
                 placeholder="seuusuario"
+                className={inputCls}
+              />
+            </Field>
+            <Field label="Email público (opt-in)" hint="Mostrado no perfil">
+              <input
+                value={emailPublic}
+                onChange={e => setEmailPublic(e.target.value)}
+                maxLength={120}
+                placeholder="voce@email.com"
+                className={inputCls}
+              />
+            </Field>
+            <Field label="Telefone público (opt-in)" hint="Separado do WhatsApp">
+              <input
+                value={phonePublic}
+                onChange={e => setPhonePublic(e.target.value.replace(/[^\d+\s()-]/g, ''))}
+                maxLength={30}
+                placeholder="+55 11 99999-8888"
                 className={inputCls}
               />
             </Field>
@@ -237,6 +302,44 @@ function Field({ label, hint, children }: { label: string; hint?: string; childr
         {hint && <p className="text-[10px] text-gray-400">{hint}</p>}
       </div>
       {children}
+    </div>
+  )
+}
+
+function ChipsInput({ value, onChange, placeholder }: { value: string[]; onChange: (v: string[]) => void; placeholder?: string }) {
+  const [draft, setDraft] = useState('')
+
+  function commit() {
+    const parts = draft.split(',').map(s => s.trim()).filter(Boolean)
+    if (parts.length === 0) return
+    const next = Array.from(new Set([...value, ...parts])).slice(0, 12)
+    onChange(next)
+    setDraft('')
+  }
+
+  return (
+    <div className="border border-gray-200 rounded-xl p-2 bg-gray-50 focus-within:border-black">
+      <div className="flex flex-wrap gap-1.5 mb-1">
+        {value.map((t, i) => (
+          <span key={`${t}-${i}`} className="inline-flex items-center gap-1 bg-black text-white text-xs font-semibold px-2 py-0.5 rounded-full">
+            {t}
+            <button type="button" onClick={() => onChange(value.filter((_, j) => j !== i))} className="hover:opacity-70">
+              <X className="w-3 h-3" />
+            </button>
+          </span>
+        ))}
+      </div>
+      <input
+        value={draft}
+        onChange={e => setDraft(e.target.value)}
+        onKeyDown={e => {
+          if (e.key === 'Enter' || e.key === ',') { e.preventDefault(); commit() }
+          else if (e.key === 'Backspace' && !draft && value.length) { onChange(value.slice(0, -1)) }
+        }}
+        onBlur={commit}
+        placeholder={value.length === 0 ? placeholder : ''}
+        className="w-full bg-transparent outline-none text-sm text-black placeholder:text-gray-400 py-1"
+      />
     </div>
   )
 }

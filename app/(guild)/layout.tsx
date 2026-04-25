@@ -7,6 +7,7 @@ import { Header } from '@/components/layout/Header'
 import { MobileNav } from '@/components/layout/MobileNav'
 import { SplashScreen } from '@/components/layout/SplashScreen'
 import { PageTransition } from '@/components/layout/PageTransition'
+import { Toaster } from '@/components/ui/Toaster'
 import { useAuthStore } from '@/store/auth'
 import { useUIStore } from '@/store/ui'
 
@@ -70,6 +71,7 @@ export default function GuildLayout({ children }: { children: React.ReactNode })
         </main>
       </div>
       <MobileNav />
+      <Toaster />
     </div>
   )
 }

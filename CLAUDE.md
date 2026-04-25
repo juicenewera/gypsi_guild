@@ -133,9 +133,12 @@ npm run dev          # localhost:3000
 .\pocketbase.exe serve   # dentro de pocketbase/ → :8090
 ```
 
-### Credenciais de dev (NÃO commitar)
-- PocketBase admin: admin@guild.com / admin12345678 → 127.0.0.1:8090/_/
-- Usuário teste: cigano@guild.com / password123 (Nível 99, Mago, admin)
+### Credenciais de dev
+- Vivem em `.env.local` (PB_ADMIN_EMAIL / PB_ADMIN_PASSWORD) e no Supabase Auth.
+- Usuário teste: troque a senha em prod e mantenha em password manager local. Nunca commitar.
+- Se você herdou os defaults antigos (`admin12345678`, `password123`), troque agora:
+  - PocketBase: 127.0.0.1:8090/_/ → Settings → Admins
+  - Supabase: dashboard → Auth → Users
 
 ---
 
@@ -152,18 +155,30 @@ app/
 └── onboarding/               # Fluxo de onboarding
 
 components/
-├── layout/Header, Sidebar, MobileNav
-├── post/PostCard
-└── ui/XPBar, PixelBadge, PixelButton, PixelCard, PathBadge, Skeleton
+├── layout/        Header, Sidebar, MobileNav, Navbar, Footer, NotificationsPopover, SplashScreen, PageTransition
+├── post/          PostCard
+├── profile/       EditProfileModal
+├── sections/      PageHero, CTABanner
+├── feedback/      FeedbackWidget
+├── video/         VideoEmbed
+└── ui/            XPBar, PixelBadge, PixelButton, PixelBg, ButtonGlass, ButtonRPG,
+                   SectionDark, SectionLight, PixelImage, button, textarea, tooltip,
+                   prompt-input, grid-loading, Toaster
 
 lib/
-├── pocketbase/client.ts, types.ts
-├── xp.ts                     # ⚠️ lógica definida mas NÃO conectada ao backend
+├── pocketbase/types.ts       # legacy (só Profile usado em store/auth.ts)
+├── supabase/client.ts, queries.ts
+├── xp.ts
 └── utils.ts
 
 store/
-├── auth.ts                   # ⚠️ verificar se atualiza XP localmente
-└── notifications.ts
+├── auth.ts            # Supabase only
+├── notifications.ts
+├── toast.ts
+└── ui.ts
+
+utils/
+└── supabase/proxy.ts  # usado por proxy.ts (root, gate de auth)
 ```
 
 ---
@@ -172,11 +187,7 @@ store/
 
 | Item | Arquivo | Problema |
 |------|---------|---------|
-| XP não conectado | `lib/xp.ts` | Valores definidos mas não chamados ao criar posts/comments |
-| Auth store XP | `store/auth.ts` | Verificar se atualiza XP localmente |
 | Design antigo | `app/(guild)/adventures/page.tsx` | Usa `font-press-start`, `pixel-border`, vars antigas |
-| Design antigo | `app/(guild)/post/new/page.tsx` | Usa PixelCard, font antiga |
-| Design antigo | `app/(guild)/post/[id]/page.tsx` | Usa PixelCard, font antiga |
 
 ---
 
@@ -190,19 +201,15 @@ store/
 | 4 | ⬜ | Educação: CRUD cursos, player, Stripe, XP tracking |
 | 5 | ⬜ | Animações Framer Motion, SEO, Core Web Vitals, polish |
 
-### Sprint 2 — spec detalhada
-Ver `docs/SPRINT-2.md` — 7 rotas, estrutura de seções, componentes compartilhados PageHero + CTABanner.
-
 ### Sprint 3 — spec detalhada
 Ver `docs/SPRINT-3.md` — Auth visual, Dashboard, Feed migration, XP conectado.
 
-### Supabase (Sprint 3+)
-- **Project ID:** smzsdsbddepieznqwnho
-- **URL:** https://smzsdsbddepieznqwnho.supabase.co
-- **Token:** em `.env.local` como `SUPABASE_ACCESS_TOKEN`
-- **Schema:** `docs/SUPABASE-SCHEMA.md` — 12 tabelas prontas para migration
-- **Pendente:** buscar ANON_KEY e SERVICE_ROLE_KEY em Dashboard > Settings > API
-- **Próxima sessão:** executar migrations via MCP supabase, instalar @supabase/supabase-js, migrar auth
+### Supabase (em produção)
+- **Project ID:** `rvoyllttmlluhwenhyln` (fonte de verdade: `.env.local`)
+- **URL:** https://rvoyllttmlluhwenhyln.supabase.co
+- **Schema:** 15 tabelas ativas — ver `docs/SUPABASE-SCHEMA.md` (desatualizado, precisa sync) e `list_tables` via MCP pra snapshot real
+- **Migrations aplicadas via MCP:** `f3_xp_pipeline` (2026-04-20) — triggers de XP em posts/likes/missões, cap diário 450 XP, notificações de level-up
+- **Project IDs obsoletos (NÃO usar):** `smzsdsbddepieznqwnho`, `jydhdznqbwuwlfmmdwyi`, `yruhumgmyonokjcqwmsq`
 
 ---
 
@@ -212,7 +219,7 @@ Ver `docs/SPRINT-3.md` — Auth visual, Dashboard, Feed migration, XP conectado.
 2. **Cores:** Usar tokens CSS (`--color-accent-primary`, etc.). Zero hardcoded hex no JSX/TSX.
 3. **Glassmorphism:** Sempre incluir `-webkit-backdrop-filter` junto com `backdrop-filter`.
 4. **Pixel art:** Sempre usar `image-rendering: pixelated` + `-moz-crisp-edges`.
-5. **Supabase:** Verificar project ID antes de qualquer operação (risco phantom project jydhdznqbwuwlfmmdwyi — BANIDO).
+5. **Supabase:** Projeto correto = `rvoyllttmlluhwenhyln` (ver `.env.local`). Ignorar IDs antigos em docs: `smzsdsbddepieznqwnho`, `jydhdznqbwuwlfmmdwyi`, `yruhumgmyonokjcqwmsq`.
 6. **Assets designer:** Sempre referenciar de `public/images/designer/` após copiar da pasta Downloads.
 7. **Commits:** Sempre commitar antes de mudar direção de design.
 8. **GitHub:** https://github.com/Cigano-agi/gypsi-vip (privado, branch master).

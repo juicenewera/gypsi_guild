@@ -1,14 +1,16 @@
 'use client'
 
 import Link from 'next/link'
-import { Bell, Search, PanelLeftOpen } from 'lucide-react'
-import { useNotificationsStore } from '@/store/notifications'
+import { Search, PanelLeftOpen, Shield } from 'lucide-react'
+import { NotificationsPopover } from './NotificationsPopover'
 import { useUIStore } from '@/store/ui'
+import { useAuthStore } from '@/store/auth'
 import { useState, useRef, useEffect } from 'react'
 
 export function Header() {
-  const { unreadCount } = useNotificationsStore()
   const { sidebarCollapsed, hydrated, hydrate, toggleSidebar } = useUIStore()
+  const { user } = useAuthStore()
+  const isStaff = !!(user as any)?.is_admin || !!(user as any)?.is_founder
   const [searchQuery, setSearchQuery] = useState('')
   const searchRef = useRef<HTMLInputElement>(null)
 
@@ -52,16 +54,18 @@ export function Header() {
         </div>
       </div>
 
-      <div className="flex items-center gap-4">
-        <Link
-          href="/notificacoes"
-          className="relative p-2 text-text-secondary hover:text-text-primary transition-colors"
-        >
-          <Bell className="w-4 h-4" />
-          {unreadCount > 0 && (
-            <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-text-primary rounded-full border-2 border-bg-primary"></span>
-          )}
-        </Link>
+      <div className="flex items-center gap-2">
+        {isStaff && (
+          <Link
+            href="/admin"
+            className="p-2 text-text-secondary hover:text-text-primary transition-colors"
+            title="Painel do Mestre"
+            aria-label="Painel do Mestre"
+          >
+            <Shield className="w-4 h-4" strokeWidth={2} />
+          </Link>
+        )}
+        <NotificationsPopover />
       </div>
     </header>
   )

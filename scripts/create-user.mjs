@@ -1,22 +1,41 @@
 // scripts/create-user.mjs
-// Cria usuário de teste diretamente via Supabase Auth Admin API
-// Uso: node scripts/create-user.mjs
+// Cria usuário de teste via signUp do Supabase.
+// Uso:
+//   SEED_EMAIL=foo@bar.com SEED_PASSWORD=xxx SEED_USERNAME=foo node scripts/create-user.mjs
+// Lê NEXT_PUBLIC_SUPABASE_URL e NEXT_PUBLIC_SUPABASE_ANON_KEY do .env.local automaticamente.
 
 import { createClient } from '@supabase/supabase-js'
+import { readFileSync } from 'node:fs'
 
-const SUPABASE_URL = 'https://rvoyllttmlluhwenhyln.supabase.co'
+// Carrega .env.local (sem dotenv pra evitar dep)
+try {
+  const env = readFileSync(new URL('../.env.local', import.meta.url), 'utf8')
+  for (const line of env.split('\n')) {
+    const m = line.match(/^([A-Z_]+)=(.*)$/)
+    if (m && !process.env[m[1]]) process.env[m[1]] = m[2]
+  }
+} catch { /* env opcional */ }
 
-// Para criar usuário via admin precisamos do service_role key
-// Como não temos, usamos signUp normal (funciona com email confirmation OFF)
-const ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ2b3lsbHR0bWxsdWh3ZW5oeWxuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU3OTY0MjAsImV4cCI6MjA5MTM3MjQyMH0.wLXV1lUTIT1VTzvS_tq_X6k3K2uClK_0qjvOKjGEv9Y'
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL
+const ANON_KEY     = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+
+if (!SUPABASE_URL || !ANON_KEY) {
+  console.error('Faltam NEXT_PUBLIC_SUPABASE_URL / NEXT_PUBLIC_SUPABASE_ANON_KEY no env.')
+  process.exit(1)
+}
 
 const supabase = createClient(SUPABASE_URL, ANON_KEY)
 
 async function createUser() {
-  const email    = 'sf.prod.sf3@gmail.com'
-  const password = 'senha123'
-  const username = 'juicenewera'
-  const path     = 'mago'
+  const email    = process.env.SEED_EMAIL
+  const password = process.env.SEED_PASSWORD
+  const username = process.env.SEED_USERNAME
+  const path     = process.env.SEED_PATH || 'mago'
+
+  if (!email || !password || !username) {
+    console.error('Defina SEED_EMAIL, SEED_PASSWORD, SEED_USERNAME antes de rodar.')
+    process.exit(1)
+  }
 
   console.log(`\n🔧 Criando usuário: ${email}`)
 

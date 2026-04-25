@@ -1,17 +1,27 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
-import { Heart, MessageSquare, Sparkles, Image as ImageIcon, Flame } from 'lucide-react'
+import { Heart, MessageSquare, Sparkles, Paperclip, ArrowUp, Square, X, Trash2 } from 'lucide-react'
 import { useAuthStore } from '@/store/auth'
+import { toastXpGain, toastMessage } from '@/store/toast'
 import { cn, timeAgo } from '@/lib/utils'
 import {
   fetchPosts,
   createPost,
   togglePostLike,
+  uploadPostImage,
+  deleteOwnPost,
   type FeedPost,
   type PostType,
 } from '@/lib/supabase/queries'
+import {
+  PromptInput,
+  PromptInputAction,
+  PromptInputActions,
+  PromptInputTextarea,
+} from '@/components/ui/prompt-input'
+import { Button } from '@/components/ui/button'
 
 type FilterType = 'all' | PostType
 
@@ -23,7 +33,7 @@ const FILTERS: { id: FilterType; label: string }[] = [
 ]
 
 export default function FeedPage() {
-  const { user } = useAuthStore()
+  const { user, refreshUser } = useAuthStore()
   const [filter, setFilter]     = useState<FilterType>('all')
   const [posts, setPosts]       = useState<FeedPost[]>([])
   const [loading, setLoading]   = useState(true)
@@ -32,6 +42,27 @@ export default function FeedPage() {
   const [publishing, setPublishing]     = useState(false)
   const [composerError, setComposerError] = useState<string | null>(null)
   const [likingId, setLikingId] = useState<string | null>(null)
+  const [deletingId, setDeletingId] = useState<string | null>(null)
+  const [composerImage, setComposerImage] = useState<File | null>(null)
+  const [composerImagePreview, setComposerImagePreview] = useState<string | null>(null)
+  const fileInputRef = useRef<HTMLInputElement | null>(null)
+
+  function onPickImage(e: React.ChangeEvent<HTMLInputElement>) {
+    const f = e.target.files?.[0]
+    if (!f) return
+    if (!f.type.startsWith('image/')) { setComposerError('Arquivo precisa ser imagem.'); return }
+    if (f.size > 8 * 1024 * 1024)     { setComposerError('Imagem acima de 8 MB.');       return }
+    setComposerError(null)
+    setComposerImage(f)
+    setComposerImagePreview(URL.createObjectURL(f))
+  }
+
+  function clearComposerImage() {
+    if (composerImagePreview) URL.revokeObjectURL(composerImagePreview)
+    setComposerImage(null)
+    setComposerImagePreview(null)
+    if (fileInputRef.current) fileInputRef.current.value = ''
+  }
 
   useEffect(() => {
     setLoading(true)
@@ -45,21 +76,61 @@ export default function FeedPage() {
   }, [filter, user?.id])
 
   async function handlePublish() {
-    if (!user || !composerText.trim()) return
+    if (!user || (!composerText.trim() && !composerImage)) return
     setPublishing(true)
     setComposerError(null)
+    const prevXp = Number((user as any)?.xp ?? 0)
+    const hadFirstPostBonus = !!(user as any)?.first_post_awarded_at
     try {
+      let imageUrl: string | null = null
+      if (composerImage) {
+        imageUrl = await uploadPostImage(composerImage)
+      }
       const post = await createPost({
         userId: user.id,
         content: composerText.trim(),
         type: composerType,
+        imageUrl,
       })
       setComposerText('')
+      clearComposerImage()
       setPosts(prev => [post, ...prev])
+      await refreshUser()
+
+      const latest = useAuthStore.getState().user as any
+      const delta = Math.max(Number(latest?.xp ?? 0) - prevXp, 0)
+      if (!hadFirstPostBonus && latest?.first_post_awarded_at) {
+        toastMessage('xp', 'Parabéns pelo primeiro post! 🎉', `+${delta || 50} XP de boas-vindas à Guilda.`)
+      } else if (delta > 0) {
+        const label =
+          composerType === 'adventure'  ? 'Aventura registrada' :
+          composerType === 'discussion' ? 'Discussão registrada' :
+                                          'Pergunta registrada'
+        toastXpGain(delta, label)
+      } else {
+        toastMessage('info', 'Publicado sem XP', 'Escreva mais de 50 caracteres pra ganhar XP no próximo post.')
+      }
     } catch (e: any) {
       setComposerError(e?.message || 'Erro ao publicar.')
     } finally {
       setPublishing(false)
+    }
+  }
+
+  async function handleDelete(post: FeedPost) {
+    if (!user || deletingId === post.id) return
+    if (post.user_id !== user.id) return
+    if (!confirm('Excluir esta publicação? Essa ação é permanente.')) return
+    setDeletingId(post.id)
+    const snapshot = posts
+    setPosts(prev => prev.filter(p => p.id !== post.id))
+    try {
+      await deleteOwnPost(post.id)
+    } catch (e: any) {
+      setPosts(snapshot)
+      alert(e?.message || 'Erro ao excluir.')
+    } finally {
+      setDeletingId(null)
     }
   }
 
@@ -116,21 +187,61 @@ export default function FeedPage() {
 
         {/* ── COMPOSER ──────────────────────────────────────── */}
         {user && (
-          <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm mb-6">
-            <div className="flex gap-3">
-              <div className="w-10 h-10 bg-black text-white rounded-full flex items-center justify-center font-bold text-sm flex-shrink-0">
+          <div className="mb-6">
+            <div className="flex items-center gap-3 mb-3 px-1">
+              <div className="w-9 h-9 bg-black text-white rounded-full flex items-center justify-center font-bold text-xs flex-shrink-0">
                 {currentInitials}
               </div>
-              <div className="flex-1 min-w-0">
-                <textarea
-                  value={composerText}
-                  onChange={(e) => setComposerText(e.target.value)}
-                  placeholder="O que você construiu hoje?"
-                  rows={3}
-                  className="w-full font-serif italic text-[15px] text-gray-800 placeholder:text-gray-400 focus:outline-none resize-none"
-                />
+              <span className="text-sm font-semibold text-black">{currentUsername}</span>
+            </div>
 
-                <div className="flex flex-wrap gap-2 mt-2">
+            <PromptInput
+              value={composerText}
+              onValueChange={setComposerText}
+              isLoading={publishing}
+              onSubmit={handlePublish}
+              className="w-full"
+            >
+              <PromptInputTextarea placeholder="O que você construiu hoje?" />
+
+              {composerImagePreview && (
+                <div className="relative mt-2 inline-block">
+                  <img
+                    src={composerImagePreview}
+                    alt="Prévia da imagem"
+                    className="max-h-60 rounded-xl border border-gray-200 object-cover"
+                  />
+                  <button
+                    type="button"
+                    onClick={clearComposerImage}
+                    className="absolute -right-2 -top-2 flex h-6 w-6 items-center justify-center rounded-full bg-black text-white shadow-md hover:bg-gray-700"
+                    aria-label="Remover imagem"
+                  >
+                    <X className="size-3.5" />
+                  </button>
+                </div>
+              )}
+
+              <PromptInputActions className="flex items-center justify-between gap-2 pt-2">
+                <div className="flex flex-wrap items-center gap-2">
+                  <PromptInputAction tooltip="Anexar imagem">
+                    <label
+                      htmlFor="composer-file-upload"
+                      className="hover:bg-secondary-foreground/10 flex h-8 w-8 cursor-pointer items-center justify-center rounded-2xl"
+                    >
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        id="composer-file-upload"
+                        onChange={onPickImage}
+                        disabled={publishing}
+                      />
+                      <Paperclip className="text-primary size-4" />
+                    </label>
+                  </PromptInputAction>
+
                   {(['adventure', 'discussion', 'question'] as PostType[]).map(t => (
                     <button
                       key={t}
@@ -148,29 +259,27 @@ export default function FeedPage() {
                   ))}
                 </div>
 
-                {composerError && (
-                  <p className="text-xs text-red-600 mt-2">{composerError}</p>
-                )}
-
-                <div className="flex items-center justify-between mt-4 pt-3 border-t border-gray-100">
-                  <div className="flex gap-4 text-gray-300">
-                    <button type="button" disabled title="Em breve: anexar imagem">
-                      <ImageIcon className="w-4 h-4" />
-                    </button>
-                    <button type="button" disabled title="Em breve: destacar">
-                      <Flame className="w-4 h-4" />
-                    </button>
-                  </div>
-                  <button
+                <PromptInputAction tooltip={publishing ? 'Publicando...' : 'Publicar feito'}>
+                  <Button
+                    variant="default"
+                    size="icon"
+                    className="h-8 w-8 rounded-full"
                     onClick={handlePublish}
-                    disabled={!composerText.trim() || publishing}
-                    className="px-5 py-2 bg-black text-white text-xs font-bold rounded-full shadow-sm hover:bg-gray-800 transition-colors disabled:opacity-40"
+                    disabled={(!composerText.trim() && !composerImage) || publishing}
                   >
-                    {publishing ? 'Publicando...' : 'Publicar feito →'}
-                  </button>
-                </div>
-              </div>
-            </div>
+                    {publishing ? (
+                      <Square className="size-4 fill-current" />
+                    ) : (
+                      <ArrowUp className="size-4" />
+                    )}
+                  </Button>
+                </PromptInputAction>
+              </PromptInputActions>
+            </PromptInput>
+
+            {composerError && (
+              <p className="text-xs text-red-600 mt-2 px-1">{composerError}</p>
+            )}
           </div>
         )}
 
@@ -252,9 +361,21 @@ export default function FeedPage() {
                       )}
 
                       <Link href={`/post/${post.id}`} className="block">
-                        <p className="text-[15px] font-serif italic text-gray-700 leading-relaxed whitespace-pre-wrap">
-                          {post.content}
-                        </p>
+                        {post.content && (
+                          <p className="text-[15px] font-serif italic text-gray-700 leading-relaxed whitespace-pre-wrap">
+                            {post.content}
+                          </p>
+                        )}
+                        {post.image_url && (
+                          <div className="mt-3 overflow-hidden rounded-xl border border-gray-100 bg-gray-50">
+                            <img
+                              src={post.image_url}
+                              alt="Imagem do post"
+                              loading="lazy"
+                              className="w-full max-h-[520px] object-cover"
+                            />
+                          </div>
+                        )}
                       </Link>
 
                       <div className="flex items-center gap-5 mt-4 pt-3 border-t border-gray-50">
@@ -274,8 +395,21 @@ export default function FeedPage() {
                           className="flex items-center gap-2 text-gray-400 hover:text-black transition-colors"
                         >
                           <MessageSquare className="w-4 h-4" />
-                          <span className="text-xs font-semibold">Comentar</span>
+                          <span className="text-xs font-semibold">
+                            {post.comments_count > 0 ? post.comments_count : 'Comentar'}
+                          </span>
                         </Link>
+                        {user?.id === post.user_id && (
+                          <button
+                            onClick={() => handleDelete(post)}
+                            disabled={deletingId === post.id}
+                            className="ml-auto flex items-center gap-2 text-gray-300 hover:text-red-500 transition-colors disabled:opacity-40"
+                            aria-label="Excluir publicação"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                            <span className="text-xs font-semibold">Excluir</span>
+                          </button>
+                        )}
                       </div>
                     </div>
                   </div>

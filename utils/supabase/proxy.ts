@@ -36,18 +36,24 @@ export const createClient = async (request: NextRequest) => {
   const { data: { user } } = await supabase.auth.getUser()
 
   const pathname = request.nextUrl.pathname
-  const isPublicRoute = 
-    pathname === '/' || 
-    pathname.startsWith('/login') || 
-    pathname.startsWith('/register') || 
-    pathname.startsWith('/esqueci-senha') || 
-    pathname.startsWith('/reset-password')
-    
+
+  const PUBLIC_EXACT = new Set<string>([
+    '/', '/sobre', '/guild', '/consultoria', '/oportunidades',
+    '/agentes', '/ventures', '/matilha',
+  ])
+  const PUBLIC_PREFIXES = ['/login', '/register', '/esqueci-senha', '/reset-password']
+
+  const isPublicRoute =
+    PUBLIC_EXACT.has(pathname) ||
+    PUBLIC_PREFIXES.some(p => pathname === p || pathname.startsWith(p + '/'))
+
   const isAuthRoute = pathname.startsWith('/login') || pathname.startsWith('/register')
+  const isAdminRoute = pathname === '/admin' || pathname.startsWith('/admin/')
 
   if (!user && !isPublicRoute) {
     const url = request.nextUrl.clone()
     url.pathname = '/login'
+    url.searchParams.set('next', pathname)
     return NextResponse.redirect(url)
   }
 
@@ -55,6 +61,15 @@ export const createClient = async (request: NextRequest) => {
      const url = request.nextUrl.clone()
      url.pathname = '/dashboard'
      return NextResponse.redirect(url)
+  }
+
+  if (user && isAdminRoute) {
+    const { data: staff, error } = await supabase.rpc('is_staff', { p_user: user.id })
+    if (error || !staff) {
+      const url = request.nextUrl.clone()
+      url.pathname = '/feed'
+      return NextResponse.redirect(url)
+    }
   }
 
   return supabaseResponse

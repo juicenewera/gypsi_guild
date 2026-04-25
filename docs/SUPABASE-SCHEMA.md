@@ -1,7 +1,7 @@
 # Gipsy VIP — Supabase Schema Spec
-**Projeto:** smzsdsbddepieznqwnho
-**URL:** https://smzsdsbddepieznqwnho.supabase.co
-**Status:** SPEC — aguardando execução das migrations
+**Projeto:** `rvoyllttmlluhwenhyln` (em produção)
+**URL:** https://rvoyllttmlluhwenhyln.supabase.co
+**Status:** SPEC HISTÓRICA — schema real está em produção; use MCP `list_tables` pra snapshot vivo. Última migration aplicada: `f3_xp_pipeline` (2026-04-20).
 
 ---
 
@@ -312,15 +312,15 @@ CREATE TRIGGER profiles_updated_at BEFORE UPDATE ON profiles
 ## VARIÁVEIS DE AMBIENTE NECESSÁRIAS
 
 ```env
-# .env.local (NUNCA commitar)
-NEXT_PUBLIC_SUPABASE_URL=https://smzsdsbddepieznqwnho.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=       # pegar em: Dashboard > Settings > API
-SUPABASE_SERVICE_ROLE_KEY=           # pegar em: Dashboard > Settings > API (SECRET)
-SUPABASE_ACCESS_TOKEN=sbp_e8cf9856e90dd7385b1f29acf3858daf625d54e5
+# .env.local (NUNCA commitar) — valores reais em ./.env.local
+NEXT_PUBLIC_SUPABASE_URL=https://rvoyllttmlluhwenhyln.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=       # Dashboard > Settings > API
+SUPABASE_SERVICE_ROLE_KEY=           # Dashboard > Settings > API (SECRET)
+SUPABASE_ACCESS_TOKEN=               # personal access token para MCP
 ```
 
-**Pegar as chaves em:**
-https://supabase.com/dashboard/project/smzsdsbddepieznqwnho/settings/api
+**Dashboard:**
+https://supabase.com/dashboard/project/rvoyllttmlluhwenhyln/settings/api
 
 ---
 

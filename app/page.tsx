@@ -154,7 +154,7 @@ export default function LandingPage() {
               { level: 'Aprendiz', desc: 'Aprovado no onboarding', perks: 'Feed, missões, 1 cohort/ano', color: 'bg-gray-400', txt: 'text-gray-400', bgTab: 'bg-gray-50 border-gray-100' },
               { level: 'Builder', desc: '1 missão validada', perks: 'Job board, canais exclusivos, 2 cohorts/ano', color: 'bg-blue-500', txt: 'text-blue-500', bgTab: 'bg-blue-50/30 border-blue-100' },
               { level: 'Mestre', desc: '3 missões validadas', perks: 'Acesso antecipado, badge verificado', color: 'bg-amber-500', txt: 'text-amber-500', bgTab: 'bg-amber-50/30 border-amber-100' },
-              { level: 'Fresco pro max', desc: 'Curadoria editorial', perks: 'Cohort fechada + menção na newsletter', color: 'bg-emerald-400', txt: 'text-emerald-500', bgTab: 'bg-emerald-50/30 border-emerald-100' },
+              { level: 'AGI', desc: 'Curadoria editorial', perks: 'Cohort fechada + menção na newsletter', color: 'bg-emerald-400', txt: 'text-emerald-500', bgTab: 'bg-emerald-50/30 border-emerald-100' },
             ].map(row => (
               <div key={row.level} className={`flex flex-col sm:flex-row sm:items-center justify-between p-4 px-6 rounded-xl border ${row.bgTab}`}>
                 <div className="flex items-center gap-12 w-1/2">

@@ -130,17 +130,21 @@ export default function AventureirosPage() {
               const headline = m.bio?.trim() || 'Aventureiro da Guilda'
 
               return (
-                <Link
+                <div
                   key={m.id}
-                  href={`/perfil?u=${m.username}`}
-                  className="group relative block bg-white rounded-2xl p-5 border border-gray-100 shadow-sm hover:shadow-lg hover:border-gray-200 transition-all"
+                  className="group relative bg-white rounded-2xl p-5 border border-gray-100 shadow-sm hover:shadow-lg hover:border-gray-200 transition-all"
                 >
+                  <Link
+                    href={`/perfil?u=${m.username}`}
+                    aria-label={`Ver currículo de ${name}`}
+                    className="absolute inset-0 z-0 rounded-2xl"
+                  />
                   <ArrowUpRight
-                    className="absolute top-4 right-4 w-4 h-4 text-gray-300 group-hover:text-black transition-colors"
+                    className="absolute top-4 right-4 w-4 h-4 text-gray-300 group-hover:text-black transition-colors pointer-events-none"
                     strokeWidth={2}
                   />
 
-                  <div className="flex items-start gap-3 mb-3">
+                  <div className="flex items-start gap-3 mb-3 relative pointer-events-none">
                     <div className="relative shrink-0">
                       <div className="w-14 h-14 rounded-full bg-gray-100 border border-gray-200 flex items-center justify-center font-bold text-xs overflow-hidden">
                         {m.avatar_url
@@ -164,11 +168,11 @@ export default function AventureirosPage() {
                     </div>
                   </div>
 
-                  <p className="text-xs text-gray-600 leading-relaxed line-clamp-2 min-h-[32px] mb-3">
+                  <p className="text-xs text-gray-600 leading-relaxed line-clamp-2 min-h-[32px] mb-3 relative pointer-events-none">
                     {truncate(headline, 110)}
                   </p>
 
-                  <div className="flex flex-wrap items-center gap-1.5 mb-3">
+                  <div className="flex flex-wrap items-center gap-1.5 mb-3 relative pointer-events-none">
                     <span className={cn('text-[10px] font-bold px-2 py-0.5 rounded-full border capitalize', PATH_COLOR[m.path])}>
                       {m.path}
                     </span>
@@ -181,19 +185,18 @@ export default function AventureirosPage() {
                   </div>
 
                   {m.location && (
-                    <div className="flex items-center text-xs text-gray-400 mb-3">
+                    <div className="flex items-center text-xs text-gray-400 mb-3 relative pointer-events-none">
                       <MapPin className="w-3 h-3 mr-1" strokeWidth={2} />
                       {m.location}
                     </div>
                   )}
 
-                  <div className="flex flex-wrap gap-3 pt-3 border-t border-gray-50">
+                  <div className="flex flex-wrap gap-3 pt-3 border-t border-gray-50 relative z-10">
                     {wa && (
                       <a
                         href={`https://wa.me/${wa}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        onClick={e => e.stopPropagation()}
                         className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-600 hover:text-emerald-700"
                       >
                         <MessageCircle className="w-3.5 h-3.5" strokeWidth={2.2} />
@@ -205,18 +208,17 @@ export default function AventureirosPage() {
                         href={`https://instagram.com/${insta}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        onClick={e => e.stopPropagation()}
                         className="inline-flex items-center gap-1 text-xs font-semibold text-pink-600 hover:text-pink-700"
                       >
                         <Camera className="w-3.5 h-3.5" strokeWidth={2.2} />
                         @{insta}
                       </a>
                     )}
-                    <span className="text-xs font-semibold text-gray-400 group-hover:text-black ml-auto transition-colors">
+                    <span className="text-xs font-semibold text-gray-400 group-hover:text-black ml-auto transition-colors pointer-events-none">
                       Ver currículo →
                     </span>
                   </div>
-                </Link>
+                </div>
               )
             })}
           </div>

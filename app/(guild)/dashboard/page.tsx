@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { useAuthStore } from '@/store/auth'
 import { getLevelForXP, getLevelTitle } from '@/lib/xp'
 import { cn, timeAgo } from '@/lib/utils'
-import { fetchNotifications, type Notification } from '@/lib/supabase/queries'
+import { fetchNotifications, fetchUserDashboardStats, type Notification, type UserDashboardStats } from '@/lib/supabase/queries'
 import {
   Zap, Target, Award, Bell,
   ThumbsUp, MessageCircle, Megaphone,
@@ -18,8 +18,16 @@ const MISSIONS: { id: string; Icon: LucideIcon; title: string; rarity: string; x
   { id: '3', Icon: Award,  title: 'Missão validada',       rarity: 'Ouro',   xp: 500 },
 ]
 
-const MOCK_STATS = { posts: 14, comments: 87, upvotes: 320, adventures: 5 }
-const MOCK_RANKING = { position: 12, prevPosition: 15, userXp: 3450, weeklyXp: 280, aboveUser: 'Aventureiro Acima', aboveXp: 3795 }
+const EMPTY_STATS: UserDashboardStats = {
+  posts: 0,
+  comments: 0,
+  likes_received: 0,
+  adventures: 0,
+  weekly_xp: 0,
+  position: 0,
+  above_username: null,
+  above_xp_delta: 0,
+}
 
 const NOTIF_ICONS: Record<string, LucideIcon> = {
   upvote:  ThumbsUp,
@@ -32,33 +40,34 @@ const NOTIF_ICONS: Record<string, LucideIcon> = {
 type TabId = 'notificacoes' | 'visao-geral'
 
 export default function DashboardPage() {
-  const { user } = useAuthStore()
+  const { user, refreshUser } = useAuthStore()
   const [mounted, setMounted] = useState(false)
   const [tab, setTab] = useState<TabId>('notificacoes')
   const [notifications, setNotifications] = useState<Notification[]>([])
+  const [stats, setStats] = useState<UserDashboardStats>(EMPTY_STATS)
 
-  useEffect(() => { setMounted(true) }, [])
+  useEffect(() => { setMounted(true); refreshUser() }, [refreshUser])
 
   useEffect(() => {
     if (!user) return
     fetchNotifications(user.id, 10).then(setNotifications)
+    fetchUserDashboardStats(user.id).then(s => setStats(s ?? EMPTY_STATS))
   }, [user])
 
   if (!mounted || !user) return null
 
-  const xp    = (user as any).xp ?? 3450
+  const xp    = (user as any).xp ?? 0
   const level = getLevelForXP(xp)
   const path  = ((user as any).path ?? 'mago') as 'ladino' | 'mago' | 'mercador'
   const title = getLevelTitle(level.level, path)
-  const xpToNext = level.xpNext - level.xpCurrent
-  const progress = Math.min((level.xpCurrent / level.xpNext) * 100, 100)
+  const xpToNext = Math.max(level.xpNext - level.xpCurrent, 0)
+  const progress = level.xpNext > 0 ? Math.min((level.xpCurrent / level.xpNext) * 100, 100) : 0
   const firstName = ((user as any).name || (user as any).username || 'Viajante').split(' ')[0]
 
-  // Métricas semanais (deriva do store; fallback nos mocks caso backend não responda)
-  const weeklyXp   = MOCK_RANKING.weeklyXp
-  const weeklyPct  = xp > 0 ? Math.round((weeklyXp / Math.max(xp - weeklyXp, 1)) * 100) : 0
-  const rankDelta  = MOCK_RANKING.prevPosition - MOCK_RANKING.position
+  const weeklyXp    = stats.weekly_xp
+  const weeklyPct   = xp > weeklyXp ? Math.round((weeklyXp / Math.max(xp - weeklyXp, 1)) * 100) : 0
   const unreadCount = notifications.filter(n => !n.is_read).length
+  const rankPos     = stats.position || 0
 
   return (
     <div className="min-h-screen bg-[#F9FAFB] p-6 lg:p-10 animate-fade-in text-black">
@@ -154,15 +163,19 @@ export default function DashboardPage() {
           <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
             <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">XP · 7 dias</p>
             <p className="text-3xl font-serif font-medium text-black">+{weeklyXp}</p>
-            <p className="text-xs text-emerald-600 mt-1 font-semibold">↑ {weeklyPct}% vs semana anterior</p>
+            <p className="text-xs text-gray-400 mt-1 font-semibold">
+              {weeklyXp > 0 ? `${weeklyPct}% da sua XP total` : 'Nenhum XP nos últimos 7 dias'}
+            </p>
           </div>
           <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
-            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Ranking · Δ semanal</p>
+            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Ranking atual</p>
             <p className="text-3xl font-serif font-medium text-black">
-              {rankDelta > 0 ? `+${rankDelta}` : rankDelta}
+              {rankPos > 0 ? `#${rankPos}` : '—'}
             </p>
-            <p className={cn('text-xs mt-1 font-semibold', rankDelta >= 0 ? 'text-emerald-600' : 'text-red-500')}>
-              {rankDelta >= 0 ? '↑ subiu' : '↓ caiu'} {Math.abs(rankDelta)} {Math.abs(rankDelta) === 1 ? 'posição' : 'posições'}
+            <p className="text-xs text-gray-400 mt-1 font-semibold">
+              {stats.above_username
+                ? `+${stats.above_xp_delta.toLocaleString('pt-BR')} XP até ${stats.above_username}`
+                : rankPos === 1 ? 'Líder do ranking' : 'Publique pra entrar no ranking'}
             </p>
           </div>
           <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm col-span-2 lg:col-span-1">
@@ -222,33 +235,33 @@ export default function DashboardPage() {
 
             <div className="bg-[#F9FAFB] rounded-xl px-4 py-3 mb-3 border border-gray-100">
               <div className="flex items-center gap-4">
-                <span className="text-3xl font-serif font-medium text-black">#{MOCK_RANKING.position}</span>
+                <span className="text-3xl font-serif font-medium text-black">
+                  {rankPos > 0 ? `#${rankPos}` : '—'}
+                </span>
                 <div>
                   <p className="text-sm font-bold text-black">Você</p>
-                  <p className="text-xs text-gray-500">{MOCK_RANKING.userXp.toLocaleString('pt-BR')} XP total</p>
+                  <p className="text-xs text-gray-500">{xp.toLocaleString('pt-BR')} XP total</p>
                 </div>
-                {rankDelta !== 0 && (
-                  <span className={cn(
-                    'ml-auto text-[10px] font-bold px-2 py-0.5 rounded-full',
-                    rankDelta > 0 ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-600'
-                  )}>
-                    {rankDelta > 0 ? `↑ ${rankDelta}` : `↓ ${Math.abs(rankDelta)}`}
-                  </span>
-                )}
               </div>
             </div>
 
-            <div className="px-4 py-2 mb-4">
-              <div className="flex items-center gap-4">
-                <span className="text-xl font-serif font-medium text-gray-300">#{MOCK_RANKING.position - 1}</span>
-                <div>
-                  <p className="text-sm font-medium text-gray-400">{MOCK_RANKING.aboveUser}</p>
-                  <p className="text-xs text-gray-400">
-                    +{(MOCK_RANKING.aboveXp - MOCK_RANKING.userXp).toLocaleString('pt-BR')} XP
-                  </p>
+            {stats.above_username ? (
+              <div className="px-4 py-2 mb-4">
+                <div className="flex items-center gap-4">
+                  <span className="text-xl font-serif font-medium text-gray-300">#{Math.max(rankPos - 1, 1)}</span>
+                  <div>
+                    <p className="text-sm font-medium text-gray-400">{stats.above_username}</p>
+                    <p className="text-xs text-gray-400">
+                      +{stats.above_xp_delta.toLocaleString('pt-BR')} XP
+                    </p>
+                  </div>
                 </div>
               </div>
-            </div>
+            ) : (
+              <div className="px-4 py-2 mb-4 text-xs text-gray-400">
+                {rankPos === 1 ? 'Ninguém à sua frente' : 'Publique pra aparecer no ranking.'}
+              </div>
+            )}
 
             <Link href="/ranking" className="text-xs font-semibold text-gray-500 hover:text-black transition-colors uppercase tracking-widest">
               Ver ranking completo →
@@ -259,10 +272,10 @@ export default function DashboardPage() {
         {/* ── STATS ROW ──────────────────────────────────────── */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
           {[
-            { label: 'Posts',        value: MOCK_STATS.posts },
-            { label: 'Comentários',  value: MOCK_STATS.comments },
-            { label: 'Upvotes',      value: MOCK_STATS.upvotes },
-            { label: 'Adventures',   value: MOCK_STATS.adventures },
+            { label: 'Posts',           value: stats.posts },
+            { label: 'Comentários',     value: stats.comments },
+            { label: 'Curtidas',        value: stats.likes_received },
+            { label: 'Aventuras',       value: stats.adventures },
           ].map(stat => (
             <div key={stat.label} className="bg-white rounded-2xl p-6 text-center border border-gray-100 shadow-sm flex flex-col items-center justify-center gap-2">
               <p className="text-5xl font-serif font-medium text-black">{stat.value}</p>
